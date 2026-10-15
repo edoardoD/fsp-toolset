@@ -1,0 +1,11 @@
+// Esempio di processo FSP (Finite State Process)
+// Produttore - Consumatore con Buffer a 1 posizione
+
+BUFFER = (put -> get -> BUFFER).
+
+PRODUCER = (put -> PRODUCER).
+
+CONSUMER = (get -> CONSUMER).
+
+// Composizione concorrente
+||SYSTEM = (PRODUCER || BUFFER || CONSUMER).

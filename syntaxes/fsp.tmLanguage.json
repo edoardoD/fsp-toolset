@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "FSP",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#processes"
+    },
+    {
+      "include": "#actions"
+    },
+    {
+      "include": "#strings"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.fsp",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.fsp",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.fsp",
+          "match": "\\b(const|range|set|property|progress|menu|minimal|deterministic|when|if|then|else)\\b"
+        },
+        {
+          "name": "constant.language.fsp",
+          "match": "\\b(STOP|ERROR|END|False|True)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.fsp",
+          "match": "(->|\\|\\||\\||@|/|\\\\|::|\\+|\\-|\\*|%|==|!=|<|<=|>|>=)"
+        }
+      ]
+    },
+    "processes": {
+      "patterns": [
+        {
+          "name": "entity.name.class.fsp",
+          "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "actions": {
+      "patterns": [
+        {
+          "name": "variable.parameter.fsp",
+          "match": "\\b[a-z][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.fsp",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.fsp",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scopeName": "source.fsp"
+}

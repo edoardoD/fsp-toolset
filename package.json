@@ -1,0 +1,112 @@
+{
+  "name": "fsp-toolset-modern",
+  "displayName": "FSP Toolset Modern",
+  "description": "Zero-config VS Code support for FSP / LTS: syntax, compile, safety & progress checks and interactive LTS graphs, powered by the LTSA engine.",
+  "version": "0.1.0",
+  "publisher": "edoardoD",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edoardoD/fsp-toolset.git"
+  },
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:fsp",
+    "onCommand:fspModern.compile",
+    "onCommand:fspModern.showGraph",
+    "onCommand:fspModern.checkSafety",
+    "onCommand:fspModern.checkProgress"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "fsp",
+        "aliases": [
+          "FSP",
+          "fsp"
+        ],
+        "extensions": [
+          ".lts",
+          ".fsp"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "fsp",
+        "scopeName": "source.fsp",
+        "path": "./syntaxes/fsp.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "fspModern.compile",
+        "title": "FSP: Compile Current File"
+      },
+      {
+        "command": "fspModern.showGraph",
+        "title": "FSP: Display Graph Visualisation",
+        "icon": "$(git-commit)"
+      },
+      {
+        "command": "fspModern.checkSafety",
+        "title": "FSP: Check Safety and Deadlock"
+      },
+      {
+        "command": "fspModern.checkProgress",
+        "title": "FSP: Check Progress"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "resourceLangId == fsp",
+          "command": "fspModern.showGraph",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "FSP Toolset Modern",
+      "properties": {
+        "fspModern.ltsaJarPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional: Path to a local ltsa.jar. If empty, the extension will download it automatically."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "npm run build",
+    "watch": "npm run build -- --watch",
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node && cp src/java/FspBridge*.class dist/",
+    "lint": "eslint src --ext ts",
+    "test": "tsc -p ./ && mocha out/test/**/*.test.js",
+    "build:java": "javac --release 8 -nowarn -cp lib/ltsa.jar src/java/FspBridge.java"
+  },
+  "dependencies": {
+    "find-java-home": "^1.2.2",
+    "unzipper": "^0.11.6"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^20.14.9",
+    "@types/unzipper": "^0.10.9",
+    "@types/vscode": "~1.93.0",
+    "@vscode/test-electron": "^2.4.0",
+    "esbuild": "^0.23.0",
+    "eslint": "^9.6.0",
+    "mocha": "^10.5.2",
+    "typescript": "^5.5.3"
+  }
+}
