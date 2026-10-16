@@ -15,12 +15,20 @@
 
     const processSelect = document.getElementById('processSelect');
     const layoutSelect = document.getElementById('layoutSelect');
+    const labelSelect = document.getElementById('labelSelect');
     const stateCount = document.getElementById('stateCount');
     const btnFit = document.getElementById('btnFit');
     const btnZoomIn = document.getElementById('btnZoomIn');
     const btnZoomOut = document.getElementById('btnZoomOut');
 
     // Toolbar listeners
+    if (labelSelect) {
+        labelSelect.addEventListener('change', () => {
+            if (currentProcess) {
+                renderGraph(currentProcess);
+            }
+        });
+    }
     if (processSelect) {
         processSelect.addEventListener('change', (e) => {
             const processName = e.target.value;
@@ -271,17 +279,37 @@
         const hasOutgoing = new Set();
         transitions.forEach(t => hasOutgoing.add(t.from));
 
+        const labelMode = labelSelect ? labelSelect.value : 'name';
+        const stateNames = process.stateNames || {};
+
         // Add Nodes
         nodeIds.forEach(id => {
             const isError = (id === -1);
             const isStart = (id === 0);
             const isStop = !isError && !hasOutgoing.has(id);
-            const label = isError ? 'ERROR' : (isStop ? String(id) + ' (STOP)' : String(id));
+            const rawName = stateNames[id] || stateNames[String(id)];
+            const hasName = typeof rawName === 'string' && rawName.trim() !== '';
+            const displayName = hasName ? rawName : String(id);
+            const stopSuffix = (isStop && !displayName.includes('STOP')) ? ' (STOP)' : '';
+
+            let label;
+            if (isError) {
+                label = 'ERROR';
+            } else if (labelMode === 'both') {
+                label = (hasName ? `${id}: ${rawName}` : String(id)) + stopSuffix;
+            } else if (labelMode === 'id') {
+                label = String(id) + (isStop ? ' (STOP)' : '');
+            } else {
+                // Default 'name'
+                label = displayName + stopSuffix;
+            }
 
             elements.push({
                 data: {
                     id: `n${id}`,
-                    label: label
+                    stateId: id,
+                    label: label,
+                    stateName: rawName || ''
                 },
                 classes: isStart ? 'start' : (isError ? 'error' : (isStop ? 'stop' : 'normal'))
             });
@@ -324,8 +352,10 @@
                             'text-halign': 'center',
                             'font-size': '12px',
                             'font-weight': '600',
-                            'width': '36px',
-                            'height': '36px',
+                            'shape': 'round-rectangle',
+                            'width': 'label',
+                            'height': 'label',
+                            'padding': '10px',
                             'border-width': 1.5,
                             'border-color': 'rgba(255, 255, 255, 0.25)',
                             'shadow-blur': 4,
@@ -338,31 +368,26 @@
                         style: {
                             'background-color': '#28a745',
                             'shape': 'round-rectangle',
-                            'border-width': 2,
-                            'border-color': '#ffffff',
-                            'width': '40px',
-                            'height': '36px'
+                            'border-width': 2.5,
+                            'border-color': '#ffffff'
                         }
                     },
                     {
                         selector: '.stop',
                         style: {
                             'background-color': '#6c757d',
-                            'shape': 'octagon',
-                            'width': '52px',
-                            'height': '44px',
-                            'font-size': '10px'
+                            'shape': 'round-rectangle',
+                            'border-width': 2,
+                            'border-color': '#adb5bd'
                         }
                     },
                     {
                         selector: '.error',
                         style: {
                             'background-color': '#d9534f',
-                            'shape': 'diamond',
-                            'width': '46px',
-                            'height': '46px',
-                            'border-width': 2,
-                            'border-color': '#ffffff'
+                            'shape': 'round-rectangle',
+                            'border-width': 2.5,
+                            'border-color': '#ffcccc'
                         }
                     },
                     {

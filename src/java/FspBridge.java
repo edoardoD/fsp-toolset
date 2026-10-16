@@ -1,6 +1,7 @@
 import lts.*;
 import java.io.*;
 import java.util.*;
+import java.lang.reflect.*;
 
 /**
  * Headless bridge around the (GUI-only) LTSA engine.
@@ -100,6 +101,11 @@ public class FspBridge {
                 if (cs == null) {
                     errors.add(errorJson(1, 1, "Target not found: " + name));
                 } else if (mode.equals("graph")) {
+                    Map<String, Map<Integer, String>> allProcNames = new HashMap<String, Map<Integer, String>>();
+                    for (Object pk : processes.keySet()) {
+                        String pName = (String) pk;
+                        allProcNames.put(pName, extractProcessStateNames(processes.get(pk), pName));
+                    }
                     cs.compose(output);
                     List<CompactState> list = new ArrayList<CompactState>();
                     if (cs.composition != null) {
@@ -110,8 +116,24 @@ public class FspBridge {
                         }
                     }
                     for (CompactState m : list) {
-                        // For a plain process target keep only that process.
-                        machines.add(machineJson(m, wrapped ? target : null));
+                        String effName = wrapped ? target : (m.name != null ? m.name : "UNKNOWN");
+                        if (effName.endsWith("()")) effName = effName.substring(0, effName.length() - 2);
+
+                        Map<Integer, String> sNames = null;
+                        if (m == cs.composition && cs.machines != null && cs.machines.size() > 1) {
+                            sNames = buildCompositeStateNames(cs, m, allProcNames);
+                        } else {
+                            sNames = allProcNames.get(effName);
+                            if (sNames == null) {
+                                for (String pk : allProcNames.keySet()) {
+                                    if (sameName(pk, effName)) {
+                                        sNames = allProcNames.get(pk);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        machines.add(machineJson(m, wrapped ? target : null, sNames));
                     }
                 } else if (mode.equals("check")) {
                     cs.compose(output);
@@ -175,7 +197,7 @@ public class FspBridge {
         return n.equals(target);
     }
 
-    private static String machineJson(CompactState cs, String nameOverride) {
+    private static String machineJson(CompactState cs, String nameOverride, Map<Integer, String> stateNames) {
         String name = nameOverride != null ? nameOverride : (cs.name != null ? cs.name : "UNKNOWN");
         if (name.endsWith("()")) name = name.substring(0, name.length() - 2);
         StringBuilder sb = new StringBuilder();
@@ -204,8 +226,173 @@ public class FspBridge {
                 }
             }
         }
-        sb.append("],\"truncated\":").append(truncated).append("}");
+        sb.append("],\"truncated\":").append(truncated);
+        sb.append(",\"stateNames\":{");
+        if (stateNames != null && !stateNames.isEmpty()) {
+            boolean firstSn = true;
+            for (Map.Entry<Integer, String> entry : stateNames.entrySet()) {
+                if (!firstSn) sb.append(",");
+                sb.append(quote(String.valueOf(entry.getKey()))).append(":").append(quote(entry.getValue()));
+                firstSn = false;
+            }
+        }
+        sb.append("}}");
         return sb.toString();
+    }
+
+    private static String formatStateName(String name) {
+        if (name == null) return "";
+        if (name.endsWith("()")) name = name.substring(0, name.length() - 2);
+        return name.replaceAll("\\.(\\d+)", "[$1]");
+    }
+
+    private static Map<Integer, String> extractProcessStateNames(Object ps, String procName) {
+        Map<Integer, String> map = new HashMap<Integer, String>();
+        if (ps == null) return map;
+        try {
+            Class smClass = Class.forName("lts.StateMachine");
+            Constructor ctor = smClass.getDeclaredConstructor(Class.forName("lts.ProcessSpec"));
+            ctor.setAccessible(true);
+            Object sm = ctor.newInstance(ps);
+
+            Field statesField = smClass.getDeclaredField("transitions");
+            statesField.setAccessible(true);
+            Vector transitions = (Vector) statesField.get(sm);
+
+            Field counterField = smClass.getDeclaredField("stateLabel");
+            counterField.setAccessible(true);
+            Counter stateLabel = (Counter) counterField.get(sm);
+            int max = stateLabel != null ? stateLabel.lastLabel().intValue() : 0;
+
+            EventState[] oldStates = new EventState[max];
+            Field alphaField = smClass.getDeclaredField("alphabet");
+            alphaField.setAccessible(true);
+            Hashtable alpha = (Hashtable) alphaField.get(sm);
+
+            if (transitions != null && alpha != null) {
+                for (Object o : transitions) {
+                    Object evSym = field(o, "event", null);
+                    Integer ev = (Integer) alpha.get(evSym != null ? evSym.toString() : "");
+                    int tFrom = (Integer) field(o, "from", -1);
+                    int tTo = (Integer) field(o, "to", -1);
+                    if (ev != null && tFrom >= 0 && tFrom < max) {
+                        oldStates[tFrom] = EventState.add(oldStates[tFrom], new EventState(ev, tTo));
+                    }
+                }
+            }
+
+            MyIntHash reachMap = (oldStates.length > 0) ? EventState.reachable(oldStates) : null;
+
+            Field ef = smClass.getDeclaredField("explicit_states");
+            ef.setAccessible(true);
+            Hashtable exp = (Hashtable) ef.get(sm);
+            if (exp != null) {
+                for (Object k : exp.keySet()) {
+                    String raw = (String) k;
+                    Integer oldId = (Integer) exp.get(k);
+                    if (oldId == null) continue;
+                    int id = (oldId >= 0 && reachMap != null) ? reachMap.get(oldId) : oldId;
+                    if (id < -1) continue; // Unreachable state
+
+                    String formatted = formatStateName(raw);
+                    String cur = map.get(id);
+                    if (cur == null) {
+                        map.put(id, formatted);
+                    } else if (raw.equalsIgnoreCase(procName) && !cur.equalsIgnoreCase(procName)) {
+                        // Keep more specific state name
+                    } else if (!raw.equalsIgnoreCase(procName) && cur.equalsIgnoreCase(procName)) {
+                        map.put(id, formatted);
+                    }
+                }
+            }
+        } catch (Throwable ignored) { }
+        return map;
+    }
+
+    private static Map<Integer, String> buildCompositeStateNames(
+            CompositeState cs, CompactState comp, Map<String, Map<Integer, String>> allProcNames) {
+        Map<Integer, String> result = new HashMap<Integer, String>();
+        if (cs.machines == null || comp == null || comp.maxStates <= 0) return result;
+
+        int numMachines = cs.machines.size();
+        CompactState[] machines = new CompactState[numMachines];
+        Map[] machStateNames = new Map[numMachines];
+        for (int i = 0; i < numMachines; i++) {
+            machines[i] = (CompactState) cs.machines.get(i);
+            String mName = machines[i].name != null ? machines[i].name : "";
+            if (mName.endsWith("()")) mName = mName.substring(0, mName.length() - 2);
+            machStateNames[i] = allProcNames.get(mName);
+            if (machStateNames[i] == null) machStateNames[i] = Collections.emptyMap();
+        }
+
+        int[][] stateTuples = new int[comp.maxStates][numMachines];
+        boolean[] visited = new boolean[comp.maxStates];
+        Arrays.fill(stateTuples[0], 0);
+        visited[0] = true;
+
+        Queue<Integer> queue = new LinkedList<Integer>();
+        queue.add(0);
+
+        while (!queue.isEmpty()) {
+            int curr = queue.poll();
+            int[] currTuple = stateTuples[curr];
+
+            if (comp.states != null && curr < comp.states.length) {
+                EventState es = comp.states[curr];
+                while (es != null) {
+                    int next = (Integer) field(es, "next", -1);
+                    int ev = (Integer) field(es, "event", -1);
+                    String action = (comp.alphabet != null && ev >= 0 && ev < comp.alphabet.length)
+                            ? comp.alphabet[ev] : null;
+
+                    if (next >= 0 && next < comp.maxStates && !visited[next] && action != null) {
+                        int[] nextTuple = new int[numMachines];
+                        for (int m = 0; m < numMachines; m++) {
+                            CompactState mach = machines[m];
+                            int machCurrState = currTuple[m];
+                            int machNext = getNextState(mach, machCurrState, action);
+                            nextTuple[m] = (machNext != -2) ? machNext : machCurrState;
+                        }
+                        stateTuples[next] = nextTuple;
+                        visited[next] = true;
+                        queue.add(next);
+                    }
+                    es = (EventState) field(es, "list", null);
+                }
+            }
+        }
+
+        for (int s = 0; s < comp.maxStates; s++) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            for (int m = 0; m < numMachines; m++) {
+                if (m > 0) sb.append(", ");
+                int subState = stateTuples[s][m];
+                String subName = (String) machStateNames[m].get(subState);
+                if (subName != null) {
+                    sb.append(subName);
+                } else {
+                    sb.append(subState);
+                }
+            }
+            sb.append("]");
+            result.put(s, sb.toString());
+        }
+
+        return result;
+    }
+
+    private static int getNextState(CompactState mach, int state, String action) {
+        if (state < 0 || mach.states == null || state >= mach.states.length) return -2;
+        EventState es = mach.states[state];
+        while (es != null) {
+            int ev = (Integer) field(es, "event", -1);
+            if (ev >= 0 && mach.alphabet != null && ev < mach.alphabet.length && mach.alphabet[ev].equals(action)) {
+                return (Integer) field(es, "next", -1);
+            }
+            es = (EventState) field(es, "list", null);
+        }
+        return -2;
     }
 
     private static Object field(Object o, String name, Object dflt) {

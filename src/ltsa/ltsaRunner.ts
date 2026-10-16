@@ -15,6 +15,7 @@ export interface FspProcess {
     states: number;
     transitions: { from: number; to: number; label: string }[];
     truncated?: boolean;
+    stateNames?: { [id: string]: string };
 }
 
 export interface FspTarget {

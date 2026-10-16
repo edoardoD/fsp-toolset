@@ -2,7 +2,7 @@
   "name": "fsp-toolset-modern",
   "displayName": "FSP Toolset Modern",
   "description": "Zero-config VS Code support for FSP / LTS: syntax, compile, safety & progress checks and interactive LTS graphs, powered by the LTSA engine.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "EdoardoDesiderio",
   "author": {
     "name": "Edoardo Desiderio"

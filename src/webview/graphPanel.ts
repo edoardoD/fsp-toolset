@@ -103,6 +103,14 @@ export class GraphPanel {
                     </select>
                 </div>
                 <div class="toolbar-group">
+                    <span class="toolbar-label">Stati:</span>
+                    <select id="labelSelect" title="Modalità di visualizzazione dei nodi">
+                        <option value="name" selected>Nome dello stato</option>
+                        <option value="both">Nome + Numero</option>
+                        <option value="id">Solo Numero</option>
+                    </select>
+                </div>
+                <div class="toolbar-group">
                     <button id="btnFit" title="Centra la vista sul grafo">🎯 Centra</button>
                     <button id="btnZoomIn" title="Ingrandisci (Zoom in)">+</button>
                     <button id="btnZoomOut" title="Rimpicciolisci (Zoom out)">−</button>

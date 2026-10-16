@@ -64,6 +64,24 @@ describe('FSP bridge (real LTSA engine)', function () {
         assert.strictEqual(r.machines[0].transitions.length, 2);
     });
 
+    it('extracts real state names for processes and compositions', () => {
+        const testSrc = [
+            'COIN = IDLE,',
+            'IDLE = (insert -> SELECT),',
+            'SELECT = (dispense -> IDLE).',
+            '||SYS_COIN = (COIN).'
+        ].join('\n');
+        const rProc = run(testSrc, 'graph', 'COIN');
+        assert.ok(rProc.machines[0].stateNames);
+        assert.strictEqual(rProc.machines[0].stateNames['0'], 'IDLE');
+        assert.strictEqual(rProc.machines[0].stateNames['1'], 'SELECT');
+
+        const rComp = run(SRC, 'graph', 'SYS');
+        assert.ok(rComp.machines[0].stateNames);
+        assert.ok(rComp.machines[0].stateNames['0']);
+        assert.ok(rComp.machines[0].stateNames['0'].includes('USER'));
+    });
+
     it('detects a property violation with its trace', () => {
         const r = run(SRC, 'check', 'BADSYS');
         assert.strictEqual(r.verdict, 'violation');
