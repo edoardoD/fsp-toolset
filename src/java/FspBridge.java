@@ -1,6 +1,7 @@
 import lts.*;
 import java.io.*;
 import java.util.*;
+import java.util.regex.*;
 import java.lang.reflect.*;
 
 /**
@@ -61,6 +62,8 @@ public class FspBridge {
         List<String> trace = new ArrayList<String>();
         String verdict = "";
 
+        SymbolicResolver resolver = new SymbolicResolver(content);
+
         // 1. Syntax pass (always): gives errors and the list of targets.
         Hashtable composites = new Hashtable();
         Hashtable processes = new Hashtable();
@@ -83,12 +86,9 @@ public class FspBridge {
         if (parsed && !mode.equals("list")) {
             String name = target;
             if (name == null) {
-                // Same default LTSA uses: first composite, otherwise "all processes".
                 name = composites.size() > 0 ? (String) sorted(composites.keys()).get(0) : "DEFAULT";
             }
             try {
-                // LTSA's compile() only knows composites (an unknown name silently falls back to the
-                // first composite), so a plain process is wrapped in a synthetic composite appended at EOF.
                 String source = content;
                 boolean wrapped = false;
                 if (composites.get(name) == null && processes.get(name) != null) {
@@ -104,7 +104,7 @@ public class FspBridge {
                     Map<String, Map<Integer, String>> allProcNames = new HashMap<String, Map<Integer, String>>();
                     for (Object pk : processes.keySet()) {
                         String pName = (String) pk;
-                        allProcNames.put(pName, extractProcessStateNames(processes.get(pk), pName));
+                        allProcNames.put(pName, extractProcessStateNames(processes.get(pk), pName, resolver));
                     }
                     cs.compose(output);
                     List<CompactState> list = new ArrayList<CompactState>();
@@ -133,18 +133,22 @@ public class FspBridge {
                                 }
                             }
                         }
-                        machines.add(machineJson(m, wrapped ? target : null, sNames));
+                        if (sNames == null) {
+                            sNames = new HashMap<Integer, String>();
+                        }
+                        fillIntermediateStateNames(m, sNames, resolver);
+                        machines.add(machineJson(m, wrapped ? target : null, sNames, resolver));
                     }
                 } else if (mode.equals("check")) {
                     cs.compose(output);
                     cs.analyse(output);
                     verdict = verdictFrom(cs, log.toString());
-                    trace = traceOf(cs);
+                    trace = traceOf(cs, resolver);
                 } else if (mode.equals("progress")) {
                     cs.compose(output);
                     cs.checkProgress(output);
                     verdict = log.toString().contains("No progress violations detected") ? "ok" : "violation";
-                    trace = traceOf(cs);
+                    trace = traceOf(cs, resolver);
                 } else {
                     errors.add(errorJson(1, 1, "Unknown mode: " + mode));
                 }
@@ -173,6 +177,300 @@ public class FspBridge {
         realOut.flush();
     }
 
+    // ---- Symbolic constant & index resolver -------------------------------
+
+    /**
+     * Resolves integer indices back to FSP symbolic constants (e.g. COFFEE=1, TEA=2)
+     * when the index dimension represents an enum/type rather than an arithmetic step counter.
+     */
+    private static class SymbolicResolver {
+        private final Map<String, Integer> constValues = new LinkedHashMap<String, Integer>();
+        private final Set<String> boundConsts = new HashSet<String>();
+        private final Map<Integer, String> enumValueToName = new LinkedHashMap<Integer, String>();
+        private final Set<String> numericParams = new HashSet<String>();
+        private final Set<String> numericRanges = new HashSet<String>();
+        // prefix -> list of (paramName, rangeName) for each bracket dimension
+        private final Map<String, List<String[]>> prefixDimensions = new HashMap<String, List<String[]>>();
+        // prefix -> dimension index -> explicit boolean (true = symbolic, false = numeric)
+        private final Map<String, Map<Integer, Boolean>> explicitDimKind = new HashMap<String, Map<Integer, Boolean>>();
+
+        public SymbolicResolver(String rawSource) {
+            String clean = stripComments(rawSource);
+
+            // 1. Parse const NAME = INT
+            Matcher cm = Pattern.compile("\\bconst\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*=\\s*(-?\\d+)").matcher(clean);
+            while (cm.find()) {
+                try {
+                    constValues.put(cm.group(1), Integer.parseInt(cm.group(2)));
+                } catch (NumberFormatException ignored) { }
+            }
+
+            // 2. Identify range bound constants: range R = low..HIGH
+            Matcher rm = Pattern.compile("\\brange\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*=\\s*([^.\\s]+)\\s*\\.\\.\\s*([A-Za-z_][A-Za-z0-9_]*)").matcher(clean);
+            while (rm.find()) {
+                String lowBound = rm.group(2);
+                String highBound = rm.group(3);
+                if (constValues.containsKey(lowBound)) {
+                    boundConsts.add(lowBound);
+                }
+                if (constValues.containsKey(highBound)) {
+                    boundConsts.add(highBound);
+                }
+            }
+
+            // Also mark constants named MAX_*, MIN_*, NUM_*, INITIAL_*, INIT_*, LIMIT*, COUNT*, SIZE*
+            for (String cName : constValues.keySet()) {
+                String upper = cName.toUpperCase();
+                if (upper.startsWith("MAX") || upper.startsWith("MIN") || upper.startsWith("NUM")
+                        || upper.startsWith("INITIAL") || upper.startsWith("INIT")
+                        || upper.startsWith("LIMIT") || upper.startsWith("COUNT") || upper.startsWith("SIZE")) {
+                    boundConsts.add(cName);
+                }
+            }
+
+            // Build enumValueToName from non-bound constants
+            for (Map.Entry<String, Integer> entry : constValues.entrySet()) {
+                if (!boundConsts.contains(entry.getKey())) {
+                    if (!enumValueToName.containsKey(entry.getValue())) {
+                        enumValueToName.put(entry.getValue(), entry.getKey());
+                    }
+                }
+            }
+
+            // 3. Detect arithmetic counter variables (e.g. i+1, i-1, i < MAX_STEPS, c == 0)
+            Matcher arith = Pattern.compile("\\b([a-z_][A-Za-z0-9_]*)\\s*(?:[+\\-]\\s*\\d+|[<>]=?|==\\s*0)").matcher(clean);
+            while (arith.find()) {
+                numericParams.add(arith.group(1));
+            }
+
+            // First pass: collect parameter & range declarations NAME[p1:R1][p2:R2]
+            Matcher declMatcher = Pattern.compile("\\b([A-Za-z_][A-Za-z0-9_]*)((?:\\s*\\[[^\\]]+\\])+)").matcher(clean);
+            while (declMatcher.find()) {
+                String prefix = declMatcher.group(1);
+                String brackets = declMatcher.group(2);
+                Matcher bm = Pattern.compile("\\[\\s*([^\\]]+)\\s*\\]").matcher(brackets);
+                int dim = 0;
+                while (bm.find()) {
+                    String inside = bm.group(1).trim();
+                    int colon = inside.indexOf(':');
+                    if (colon != -1) {
+                        String pName = inside.substring(0, colon).trim();
+                        String rName = inside.substring(colon + 1).trim();
+                        List<String[]> dims = prefixDimensions.get(prefix);
+                        if (dims == null) {
+                            dims = new ArrayList<String[]>();
+                            prefixDimensions.put(prefix, dims);
+                        }
+                        while (dims.size() <= dim) {
+                            dims.add(new String[]{"", ""});
+                        }
+                        dims.set(dim, new String[]{pName, rName});
+                        if (numericParams.contains(pName)) {
+                            numericRanges.add(rName);
+                        }
+                    }
+                    dim++;
+                }
+            }
+
+            // Second pass: inspect all bracket references (e.g. MAKING[COFFEE][1], RELEASE[bev], output[bev])
+            Set<String> symbolicParams = new HashSet<String>();
+            Set<String> symbolicRanges = new HashSet<String>();
+            declMatcher.reset();
+            while (declMatcher.find()) {
+                String prefix = declMatcher.group(1);
+                String brackets = declMatcher.group(2);
+                Matcher bm = Pattern.compile("\\[\\s*([^\\]]+)\\s*\\]").matcher(brackets);
+                int dim = 0;
+                while (bm.find()) {
+                    String inside = bm.group(1).trim();
+                    if (inside.indexOf(':') == -1) {
+                        if (constValues.containsKey(inside) && !boundConsts.contains(inside)) {
+                            setDimKind(prefix, dim, true);
+                            List<String[]> dims = prefixDimensions.get(prefix);
+                            if (dims != null && dim < dims.size()) {
+                                if (!dims.get(dim)[0].isEmpty()) symbolicParams.add(dims.get(dim)[0]);
+                                if (!dims.get(dim)[1].isEmpty()) symbolicRanges.add(dims.get(dim)[1]);
+                            }
+                        } else if (inside.matches("-?\\d+") || inside.contains("+") || inside.contains("-")) {
+                            setDimKind(prefix, dim, false);
+                        }
+                    }
+                    dim++;
+                }
+            }
+
+            // Third pass: propagate symbolicParams and symbolicRanges to actions/states like RELEASE[bev] and output[bev]
+            declMatcher.reset();
+            while (declMatcher.find()) {
+                String prefix = declMatcher.group(1);
+                String brackets = declMatcher.group(2);
+                Matcher bm = Pattern.compile("\\[\\s*([^\\]]+)\\s*\\]").matcher(brackets);
+                int dim = 0;
+                while (bm.find()) {
+                    String inside = bm.group(1).trim();
+                    int colon = inside.indexOf(':');
+                    if (colon != -1) {
+                        String pName = inside.substring(0, colon).trim();
+                        String rName = inside.substring(colon + 1).trim();
+                        if (numericParams.contains(pName) || numericRanges.contains(rName)) {
+                            setDimKind(prefix, dim, false);
+                        } else if (symbolicParams.contains(pName) || symbolicRanges.contains(rName)) {
+                            setDimKind(prefix, dim, true);
+                        }
+                    } else if (symbolicParams.contains(inside)) {
+                        setDimKind(prefix, dim, true);
+                    } else if (numericParams.contains(inside)) {
+                        setDimKind(prefix, dim, false);
+                    }
+                    dim++;
+                }
+            }
+        }
+
+        private void setDimKind(String prefix, int dim, boolean isSymbolic) {
+            Map<Integer, Boolean> map = explicitDimKind.get(prefix);
+            if (map == null) {
+                map = new HashMap<Integer, Boolean>();
+                explicitDimKind.put(prefix, map);
+            }
+            // If any reference uses a symbolic constant in this dimension, prefer symbolic unless already marked numeric counter
+            if (!map.containsKey(dim) || isSymbolic) {
+                List<String[]> dims = prefixDimensions.get(prefix);
+                if (dims != null && dim < dims.size()) {
+                    String pName = dims.get(dim)[0];
+                    String rName = dims.get(dim)[1];
+                    if (numericParams.contains(pName) || numericRanges.contains(rName)) {
+                        map.put(dim, false);
+                        return;
+                    }
+                }
+                map.put(dim, isSymbolic);
+            }
+        }
+
+        public boolean isDimensionSymbolic(String prefix, int dim) {
+            List<String[]> dims = prefixDimensions.get(prefix);
+            if (dims != null && dim < dims.size()) {
+                String pName = dims.get(dim)[0];
+                String rName = dims.get(dim)[1];
+                if (numericParams.contains(pName) || numericRanges.contains(rName)) {
+                    return false;
+                }
+            }
+            Map<Integer, Boolean> map = explicitDimKind.get(prefix);
+            if (map != null && map.containsKey(dim)) {
+                return map.get(dim);
+            }
+            return !enumValueToName.isEmpty();
+        }
+
+        public String resolveIndex(String prefix, int dim, int val) {
+            if (isDimensionSymbolic(prefix, dim)) {
+                String sym = enumValueToName.get(val);
+                if (sym != null) {
+                    return sym;
+                }
+            }
+            return String.valueOf(val);
+        }
+
+        public String formatStateName(String raw) {
+            if (raw == null) return "";
+            if (raw.endsWith("()")) raw = raw.substring(0, raw.length() - 2);
+            return formatDottedIdentifier(raw);
+        }
+
+        public String formatActionLabel(String raw) {
+            if (raw == null) return "";
+            return formatDottedIdentifier(raw);
+        }
+
+        private String formatDottedIdentifier(String raw) {
+            // Match prefix followed by one or more .digits (e.g. MAKING.1.1 or output.1)
+            Matcher m = Pattern.compile("^([A-Za-z_][A-Za-z0-9_]*)((?:\\.-?\\d+)+)$").matcher(raw);
+            if (!m.matches()) {
+                return raw.replaceAll("\\.(\\d+)", "[$1]");
+            }
+            String prefix = m.group(1);
+            String[] parts = m.group(2).substring(1).split("\\.");
+            StringBuilder sb = new StringBuilder(prefix);
+            for (int d = 0; d < parts.length; d++) {
+                try {
+                    int val = Integer.parseInt(parts[d]);
+                    sb.append("[").append(resolveIndex(prefix, d, val)).append("]");
+                } catch (NumberFormatException e) {
+                    sb.append("[").append(parts[d]).append("]");
+                }
+            }
+            return sb.toString();
+        }
+
+        private static String stripComments(String src) {
+            String noBlock = src.replaceAll("(?s)/\\*.*?\\*/", " ");
+            return noBlock.replaceAll("(?m)//.*$", "");
+        }
+    }
+
+    /**
+     * Assigns readable contextual names to intermediate states in action sequences
+     * (e.g. states 10 and 5 between `output[bev] -> grab -> IDLE` in RELEASE[bev]).
+     */
+    private static void fillIntermediateStateNames(CompactState cs, Map<Integer, String> stateNames, SymbolicResolver resolver) {
+        if (cs == null || cs.states == null || stateNames == null) return;
+
+        // Build incoming transitions list for each state
+        Map<Integer, List<int[]>> incoming = new HashMap<Integer, List<int[]>>();
+        for (int from = 0; from < cs.maxStates; from++) {
+            EventState es = cs.states[from];
+            while (es != null) {
+                int ev = (Integer) field(es, "event", -1);
+                int to = (Integer) field(es, "to", -1);
+                if (to == -1) {
+                    to = (Integer) field(es, "next", -1);
+                }
+                if (to >= 0 && to < cs.maxStates) {
+                    List<int[]> list = incoming.get(to);
+                    if (list == null) {
+                        list = new ArrayList<int[]>();
+                        incoming.put(to, list);
+                    }
+                    list.add(new int[]{from, ev});
+                }
+                es = (EventState) field(es, "list", null);
+            }
+        }
+
+        for (int s = 0; s < cs.maxStates; s++) {
+            if (stateNames.containsKey(s)) continue;
+
+            // Find outgoing non-error transitions from s
+            List<String> outActions = new ArrayList<String>();
+            EventState es = cs.states[s];
+            while (es != null) {
+                int ev = (Integer) field(es, "event", -1);
+                int next = (Integer) field(es, "next", -1);
+                if (next != -1 && cs.alphabet != null && ev >= 0 && ev < cs.alphabet.length) {
+                    outActions.add(resolver.formatActionLabel(cs.alphabet[ev]));
+                }
+                es = (EventState) field(es, "list", null);
+            }
+
+            List<int[]> preds = incoming.get(s);
+            if (preds != null && !preds.isEmpty() && outActions.size() == 1) {
+                String nextAct = outActions.get(0);
+                int predState = preds.get(0)[0];
+                String predName = stateNames.get(predState);
+                if (predName != null && predName.contains("[")) {
+                    // Example: predName is "RELEASE[COFFEE]", nextAct is "grab" -> "RELEASE[COFFEE][→" + nextAct + "]"
+                    stateNames.put(s, predName + "[→" + nextAct + "]");
+                } else {
+                    stateNames.put(s, "→" + nextAct);
+                }
+            }
+        }
+    }
+
     // ---- result helpers ---------------------------------------------------
 
     private static String verdictFrom(CompositeState cs, String text) {
@@ -182,11 +480,11 @@ public class FspBridge {
         return "ok";
     }
 
-    private static List<String> traceOf(CompositeState cs) {
+    private static List<String> traceOf(CompositeState cs, SymbolicResolver resolver) {
         List<String> out = new ArrayList<String>();
         Vector t = cs.getErrorTrace();
         if (t != null) {
-            for (Object o : t) out.add(String.valueOf(o));
+            for (Object o : t) out.add(resolver.formatActionLabel(String.valueOf(o)));
         }
         return out;
     }
@@ -197,7 +495,7 @@ public class FspBridge {
         return n.equals(target);
     }
 
-    private static String machineJson(CompactState cs, String nameOverride, Map<Integer, String> stateNames) {
+    private static String machineJson(CompactState cs, String nameOverride, Map<Integer, String> stateNames, SymbolicResolver resolver) {
         String name = nameOverride != null ? nameOverride : (cs.name != null ? cs.name : "UNKNOWN");
         if (name.endsWith("()")) name = name.substring(0, name.length() - 2);
         StringBuilder sb = new StringBuilder();
@@ -215,7 +513,8 @@ public class FspBridge {
                     if (count >= MAX_TRANSITIONS) { truncated = true; break outer; }
                     int ev = (Integer) field(es, "event", -1);
                     int next = (Integer) field(es, "next", -1);
-                    String label = (cs.alphabet != null && ev >= 0 && ev < cs.alphabet.length) ? cs.alphabet[ev] : "tau";
+                    String rawLabel = (cs.alphabet != null && ev >= 0 && ev < cs.alphabet.length) ? cs.alphabet[ev] : "tau";
+                    String label = resolver.formatActionLabel(rawLabel);
                     if (!first) sb.append(",");
                     sb.append("{\"from\":").append(i).append(",\"to\":").append(next)
                       .append(",\"label\":").append(quote(label)).append("}");
@@ -240,13 +539,7 @@ public class FspBridge {
         return sb.toString();
     }
 
-    private static String formatStateName(String name) {
-        if (name == null) return "";
-        if (name.endsWith("()")) name = name.substring(0, name.length() - 2);
-        return name.replaceAll("\\.(\\d+)", "[$1]");
-    }
-
-    private static Map<Integer, String> extractProcessStateNames(Object ps, String procName) {
+    private static Map<Integer, String> extractProcessStateNames(Object ps, String procName, SymbolicResolver resolver) {
         Map<Integer, String> map = new HashMap<Integer, String>();
         if (ps == null) return map;
         try {
@@ -294,7 +587,7 @@ public class FspBridge {
                     int id = (oldId >= 0 && reachMap != null) ? reachMap.get(oldId) : oldId;
                     if (id < -1) continue; // Unreachable state
 
-                    String formatted = formatStateName(raw);
+                    String formatted = resolver.formatStateName(raw);
                     String cur = map.get(id);
                     if (cur == null) {
                         map.put(id, formatted);

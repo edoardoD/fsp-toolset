@@ -7798,54 +7798,54 @@ var require_polyfills = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs3) {
+    function patch(fs4) {
       if (constants.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs3);
+        patchLchmod(fs4);
       }
-      if (!fs3.lutimes) {
-        patchLutimes(fs3);
+      if (!fs4.lutimes) {
+        patchLutimes(fs4);
       }
-      fs3.chown = chownFix(fs3.chown);
-      fs3.fchown = chownFix(fs3.fchown);
-      fs3.lchown = chownFix(fs3.lchown);
-      fs3.chmod = chmodFix(fs3.chmod);
-      fs3.fchmod = chmodFix(fs3.fchmod);
-      fs3.lchmod = chmodFix(fs3.lchmod);
-      fs3.chownSync = chownFixSync(fs3.chownSync);
-      fs3.fchownSync = chownFixSync(fs3.fchownSync);
-      fs3.lchownSync = chownFixSync(fs3.lchownSync);
-      fs3.chmodSync = chmodFixSync(fs3.chmodSync);
-      fs3.fchmodSync = chmodFixSync(fs3.fchmodSync);
-      fs3.lchmodSync = chmodFixSync(fs3.lchmodSync);
-      fs3.stat = statFix(fs3.stat);
-      fs3.fstat = statFix(fs3.fstat);
-      fs3.lstat = statFix(fs3.lstat);
-      fs3.statSync = statFixSync(fs3.statSync);
-      fs3.fstatSync = statFixSync(fs3.fstatSync);
-      fs3.lstatSync = statFixSync(fs3.lstatSync);
-      if (fs3.chmod && !fs3.lchmod) {
-        fs3.lchmod = function(path6, mode, cb) {
+      fs4.chown = chownFix(fs4.chown);
+      fs4.fchown = chownFix(fs4.fchown);
+      fs4.lchown = chownFix(fs4.lchown);
+      fs4.chmod = chmodFix(fs4.chmod);
+      fs4.fchmod = chmodFix(fs4.fchmod);
+      fs4.lchmod = chmodFix(fs4.lchmod);
+      fs4.chownSync = chownFixSync(fs4.chownSync);
+      fs4.fchownSync = chownFixSync(fs4.fchownSync);
+      fs4.lchownSync = chownFixSync(fs4.lchownSync);
+      fs4.chmodSync = chmodFixSync(fs4.chmodSync);
+      fs4.fchmodSync = chmodFixSync(fs4.fchmodSync);
+      fs4.lchmodSync = chmodFixSync(fs4.lchmodSync);
+      fs4.stat = statFix(fs4.stat);
+      fs4.fstat = statFix(fs4.fstat);
+      fs4.lstat = statFix(fs4.lstat);
+      fs4.statSync = statFixSync(fs4.statSync);
+      fs4.fstatSync = statFixSync(fs4.fstatSync);
+      fs4.lstatSync = statFixSync(fs4.lstatSync);
+      if (fs4.chmod && !fs4.lchmod) {
+        fs4.lchmod = function(path7, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs3.lchmodSync = function() {
+        fs4.lchmodSync = function() {
         };
       }
-      if (fs3.chown && !fs3.lchown) {
-        fs3.lchown = function(path6, uid, gid, cb) {
+      if (fs4.chown && !fs4.lchown) {
+        fs4.lchown = function(path7, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs3.lchownSync = function() {
+        fs4.lchownSync = function() {
         };
       }
       if (platform === "win32") {
-        fs3.rename = typeof fs3.rename !== "function" ? fs3.rename : function(fs$rename) {
+        fs4.rename = typeof fs4.rename !== "function" ? fs4.rename : function(fs$rename) {
           function rename(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs3.stat(to, function(stater, st) {
+                  fs4.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -7861,9 +7861,9 @@ var require_polyfills = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename, fs$rename);
           return rename;
-        }(fs3.rename);
+        }(fs4.rename);
       }
-      fs3.read = typeof fs3.read !== "function" ? fs3.read : function(fs$read) {
+      fs4.read = typeof fs4.read !== "function" ? fs4.read : function(fs$read) {
         function read(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -7871,22 +7871,22 @@ var require_polyfills = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs3, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs4, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs3, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs4, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read, fs$read);
         return read;
-      }(fs3.read);
-      fs3.readSync = typeof fs3.readSync !== "function" ? fs3.readSync : /* @__PURE__ */ function(fs$readSync) {
+      }(fs4.read);
+      fs4.readSync = typeof fs4.readSync !== "function" ? fs4.readSync : /* @__PURE__ */ function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs3, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs4, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -7896,11 +7896,11 @@ var require_polyfills = __commonJS({
             }
           }
         };
-      }(fs3.readSync);
-      function patchLchmod(fs4) {
-        fs4.lchmod = function(path6, mode, callback) {
-          fs4.open(
-            path6,
+      }(fs4.readSync);
+      function patchLchmod(fs5) {
+        fs5.lchmod = function(path7, mode, callback) {
+          fs5.open(
+            path7,
             constants.O_WRONLY | constants.O_SYMLINK,
             mode,
             function(err, fd) {
@@ -7908,80 +7908,80 @@ var require_polyfills = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs4.fchmod(fd, mode, function(err2) {
-                fs4.close(fd, function(err22) {
+              fs5.fchmod(fd, mode, function(err2) {
+                fs5.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs4.lchmodSync = function(path6, mode) {
-          var fd = fs4.openSync(path6, constants.O_WRONLY | constants.O_SYMLINK, mode);
+        fs5.lchmodSync = function(path7, mode) {
+          var fd = fs5.openSync(path7, constants.O_WRONLY | constants.O_SYMLINK, mode);
           var threw = true;
           var ret2;
           try {
-            ret2 = fs4.fchmodSync(fd, mode);
+            ret2 = fs5.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs4.closeSync(fd);
+                fs5.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs4.closeSync(fd);
+              fs5.closeSync(fd);
             }
           }
           return ret2;
         };
       }
-      function patchLutimes(fs4) {
-        if (constants.hasOwnProperty("O_SYMLINK") && fs4.futimes) {
-          fs4.lutimes = function(path6, at, mt, cb) {
-            fs4.open(path6, constants.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs5) {
+        if (constants.hasOwnProperty("O_SYMLINK") && fs5.futimes) {
+          fs5.lutimes = function(path7, at, mt, cb) {
+            fs5.open(path7, constants.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs4.futimes(fd, at, mt, function(er2) {
-                fs4.close(fd, function(er22) {
+              fs5.futimes(fd, at, mt, function(er2) {
+                fs5.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs4.lutimesSync = function(path6, at, mt) {
-            var fd = fs4.openSync(path6, constants.O_SYMLINK);
+          fs5.lutimesSync = function(path7, at, mt) {
+            var fd = fs5.openSync(path7, constants.O_SYMLINK);
             var ret2;
             var threw = true;
             try {
-              ret2 = fs4.futimesSync(fd, at, mt);
+              ret2 = fs5.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs4.closeSync(fd);
+                  fs5.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs4.closeSync(fd);
+                fs5.closeSync(fd);
               }
             }
             return ret2;
           };
-        } else if (fs4.futimes) {
-          fs4.lutimes = function(_a, _b, _c, cb) {
+        } else if (fs5.futimes) {
+          fs5.lutimes = function(_a, _b, _c, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs4.lutimesSync = function() {
+          fs5.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs3, target, mode, function(er) {
+          return orig.call(fs4, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -7991,7 +7991,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs3, target, mode);
+            return orig.call(fs4, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -8000,7 +8000,7 @@ var require_polyfills = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs3, target, uid, gid, function(er) {
+          return orig.call(fs4, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -8010,7 +8010,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs3, target, uid, gid);
+            return orig.call(fs4, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -8030,13 +8030,13 @@ var require_polyfills = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options ? orig.call(fs3, target, options, callback) : orig.call(fs3, target, callback);
+          return options ? orig.call(fs4, target, options, callback) : orig.call(fs4, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options) {
-          var stats = options ? orig.call(fs3, target, options) : orig.call(fs3, target);
+          var stats = options ? orig.call(fs4, target, options) : orig.call(fs4, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -8065,16 +8065,16 @@ var require_legacy_streams = __commonJS({
   "node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
     var Stream = require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs3) {
+    function legacy(fs4) {
       return {
         ReadStream,
         WriteStream
       };
-      function ReadStream(path6, options) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path6, options);
+      function ReadStream(path7, options) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path7, options);
         Stream.call(this);
         var self2 = this;
-        this.path = path6;
+        this.path = path7;
         this.fd = null;
         this.readable = true;
         this.paused = false;
@@ -8108,7 +8108,7 @@ var require_legacy_streams = __commonJS({
           });
           return;
         }
-        fs3.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs4.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self2.emit("error", err);
             self2.readable = false;
@@ -8119,10 +8119,10 @@ var require_legacy_streams = __commonJS({
           self2._read();
         });
       }
-      function WriteStream(path6, options) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path6, options);
+      function WriteStream(path7, options) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path7, options);
         Stream.call(this);
-        this.path = path6;
+        this.path = path7;
         this.fd = null;
         this.writable = true;
         this.flags = "w";
@@ -8147,7 +8147,7 @@ var require_legacy_streams = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs3.open;
+          this._open = fs4.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -8182,7 +8182,7 @@ var require_clone = __commonJS({
 // node_modules/graceful-fs/graceful-fs.js
 var require_graceful_fs = __commonJS({
   "node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
-    var fs3 = require("fs");
+    var fs4 = require("fs");
     var polyfills = require_polyfills();
     var legacy = require_legacy_streams();
     var clone = require_clone();
@@ -8214,12 +8214,12 @@ var require_graceful_fs = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs3[gracefulQueue]) {
+    if (!fs4[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs3, queue);
-      fs3.close = function(fs$close) {
+      publishQueue(fs4, queue);
+      fs4.close = function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs3, fd, function(err) {
+          return fs$close.call(fs4, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -8231,48 +8231,48 @@ var require_graceful_fs = __commonJS({
           value: fs$close
         });
         return close;
-      }(fs3.close);
-      fs3.closeSync = function(fs$closeSync) {
+      }(fs4.close);
+      fs4.closeSync = function(fs$closeSync) {
         function closeSync(fd) {
-          fs$closeSync.apply(fs3, arguments);
+          fs$closeSync.apply(fs4, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync;
-      }(fs3.closeSync);
+      }(fs4.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug(fs3[gracefulQueue]);
-          require("assert").equal(fs3[gracefulQueue].length, 0);
+          debug(fs4[gracefulQueue]);
+          require("assert").equal(fs4[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs3[gracefulQueue]);
+      publishQueue(global, fs4[gracefulQueue]);
     }
-    module2.exports = patch(clone(fs3));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs3.__patched) {
-      module2.exports = patch(fs3);
-      fs3.__patched = true;
+    module2.exports = patch(clone(fs4));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs4.__patched) {
+      module2.exports = patch(fs4);
+      fs4.__patched = true;
     }
-    function patch(fs4) {
-      polyfills(fs4);
-      fs4.gracefulify = patch;
-      fs4.createReadStream = createReadStream2;
-      fs4.createWriteStream = createWriteStream2;
-      var fs$readFile = fs4.readFile;
-      fs4.readFile = readFile;
-      function readFile(path6, options, cb) {
+    function patch(fs5) {
+      polyfills(fs5);
+      fs5.gracefulify = patch;
+      fs5.createReadStream = createReadStream2;
+      fs5.createWriteStream = createWriteStream2;
+      var fs$readFile = fs5.readFile;
+      fs5.readFile = readFile;
+      function readFile(path7, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$readFile(path6, options, cb);
-        function go$readFile(path7, options2, cb2, startTime) {
-          return fs$readFile(path7, options2, function(err) {
+        return go$readFile(path7, options, cb);
+        function go$readFile(path8, options2, cb2, startTime) {
+          return fs$readFile(path8, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$readFile, [path7, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$readFile, [path8, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -8280,16 +8280,16 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs4.writeFile;
-      fs4.writeFile = writeFile;
-      function writeFile(path6, data, options, cb) {
+      var fs$writeFile = fs5.writeFile;
+      fs5.writeFile = writeFile;
+      function writeFile(path7, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$writeFile(path6, data, options, cb);
-        function go$writeFile(path7, data2, options2, cb2, startTime) {
-          return fs$writeFile(path7, data2, options2, function(err) {
+        return go$writeFile(path7, data, options, cb);
+        function go$writeFile(path8, data2, options2, cb2, startTime) {
+          return fs$writeFile(path8, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$writeFile, [path7, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$writeFile, [path8, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -8297,17 +8297,17 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs4.appendFile;
+      var fs$appendFile = fs5.appendFile;
       if (fs$appendFile)
-        fs4.appendFile = appendFile;
-      function appendFile(path6, data, options, cb) {
+        fs5.appendFile = appendFile;
+      function appendFile(path7, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$appendFile(path6, data, options, cb);
-        function go$appendFile(path7, data2, options2, cb2, startTime) {
-          return fs$appendFile(path7, data2, options2, function(err) {
+        return go$appendFile(path7, data, options, cb);
+        function go$appendFile(path8, data2, options2, cb2, startTime) {
+          return fs$appendFile(path8, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$appendFile, [path7, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$appendFile, [path8, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -8315,9 +8315,9 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs4.copyFile;
+      var fs$copyFile = fs5.copyFile;
       if (fs$copyFile)
-        fs4.copyFile = copyFile;
+        fs5.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -8335,34 +8335,34 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$readdir = fs4.readdir;
-      fs4.readdir = readdir;
+      var fs$readdir = fs5.readdir;
+      fs5.readdir = readdir;
       var noReaddirOptionVersions = /^v[0-5]\./;
-      function readdir(path6, options, cb) {
+      function readdir(path7, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path7, options2, cb2, startTime) {
-          return fs$readdir(path7, fs$readdirCallback(
-            path7,
+        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path8, options2, cb2, startTime) {
+          return fs$readdir(path8, fs$readdirCallback(
+            path8,
             options2,
             cb2,
             startTime
           ));
-        } : function go$readdir2(path7, options2, cb2, startTime) {
-          return fs$readdir(path7, options2, fs$readdirCallback(
-            path7,
+        } : function go$readdir2(path8, options2, cb2, startTime) {
+          return fs$readdir(path8, options2, fs$readdirCallback(
+            path8,
             options2,
             cb2,
             startTime
           ));
         };
-        return go$readdir(path6, options, cb);
-        function fs$readdirCallback(path7, options2, cb2, startTime) {
+        return go$readdir(path7, options, cb);
+        function fs$readdirCallback(path8, options2, cb2, startTime) {
           return function(err, files) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
               enqueue([
                 go$readdir,
-                [path7, options2, cb2],
+                [path8, options2, cb2],
                 err,
                 startTime || Date.now(),
                 Date.now()
@@ -8377,21 +8377,21 @@ var require_graceful_fs = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs4);
+        var legStreams = legacy(fs5);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs4.ReadStream;
+      var fs$ReadStream = fs5.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs4.WriteStream;
+      var fs$WriteStream = fs5.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs4, "ReadStream", {
+      Object.defineProperty(fs5, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -8401,7 +8401,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs4, "WriteStream", {
+      Object.defineProperty(fs5, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -8412,7 +8412,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs4, "FileReadStream", {
+      Object.defineProperty(fs5, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -8423,7 +8423,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs4, "FileWriteStream", {
+      Object.defineProperty(fs5, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -8433,7 +8433,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      function ReadStream(path6, options) {
+      function ReadStream(path7, options) {
         if (this instanceof ReadStream)
           return fs$ReadStream.apply(this, arguments), this;
         else
@@ -8453,7 +8453,7 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function WriteStream(path6, options) {
+      function WriteStream(path7, options) {
         if (this instanceof WriteStream)
           return fs$WriteStream.apply(this, arguments), this;
         else
@@ -8471,22 +8471,22 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function createReadStream2(path6, options) {
-        return new fs4.ReadStream(path6, options);
+      function createReadStream2(path7, options) {
+        return new fs5.ReadStream(path7, options);
       }
-      function createWriteStream2(path6, options) {
-        return new fs4.WriteStream(path6, options);
+      function createWriteStream2(path7, options) {
+        return new fs5.WriteStream(path7, options);
       }
-      var fs$open = fs4.open;
-      fs4.open = open;
-      function open(path6, flags, mode, cb) {
+      var fs$open = fs5.open;
+      fs5.open = open;
+      function open(path7, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
-        return go$open(path6, flags, mode, cb);
-        function go$open(path7, flags2, mode2, cb2, startTime) {
-          return fs$open(path7, flags2, mode2, function(err, fd) {
+        return go$open(path7, flags, mode, cb);
+        function go$open(path8, flags2, mode2, cb2, startTime) {
+          return fs$open(path8, flags2, mode2, function(err, fd) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$open, [path7, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$open, [path8, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -8494,20 +8494,20 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      return fs4;
+      return fs5;
     }
     function enqueue(elem) {
       debug("ENQUEUE", elem[0].name, elem[1]);
-      fs3[gracefulQueue].push(elem);
+      fs4[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs3[gracefulQueue].length; ++i) {
-        if (fs3[gracefulQueue][i].length > 2) {
-          fs3[gracefulQueue][i][3] = now;
-          fs3[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs4[gracefulQueue].length; ++i) {
+        if (fs4[gracefulQueue][i].length > 2) {
+          fs4[gracefulQueue][i][3] = now;
+          fs4[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -8515,9 +8515,9 @@ var require_graceful_fs = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs3[gracefulQueue].length === 0)
+      if (fs4[gracefulQueue].length === 0)
         return;
-      var elem = fs3[gracefulQueue].shift();
+      var elem = fs4[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -8539,7 +8539,7 @@ var require_graceful_fs = __commonJS({
           debug("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs3[gracefulQueue].push(elem);
+          fs4[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -8589,7 +8589,7 @@ var require_get_type = __commonJS({
 var require_link_reader = __commonJS({
   "node_modules/fstream/lib/link-reader.js"(exports2, module2) {
     module2.exports = LinkReader;
-    var fs3 = require_graceful_fs();
+    var fs4 = require_graceful_fs();
     var inherits2 = require_inherits();
     var Reader = require_reader();
     inherits2(LinkReader, Reader);
@@ -8605,7 +8605,7 @@ var require_link_reader = __commonJS({
     }
     LinkReader.prototype._stat = function(currentStat) {
       var self2 = this;
-      fs3.readlink(self2._path, function(er, linkpath) {
+      fs4.readlink(self2._path, function(er, linkpath) {
         if (er) return self2.error(er);
         self2.linkpath = self2.props.linkpath = linkpath;
         self2.emit("linkpath", linkpath);
@@ -8628,9 +8628,9 @@ var require_link_reader = __commonJS({
 var require_dir_reader = __commonJS({
   "node_modules/fstream/lib/dir-reader.js"(exports2, module2) {
     module2.exports = DirReader;
-    var fs3 = require_graceful_fs();
+    var fs4 = require_graceful_fs();
     var inherits2 = require_inherits();
-    var path6 = require("path");
+    var path7 = require("path");
     var Reader = require_reader();
     var assert = require("assert").ok;
     inherits2(DirReader, Reader);
@@ -8655,7 +8655,7 @@ var require_dir_reader = __commonJS({
       var self2 = this;
       if (self2._gotEntries) return;
       self2._gotEntries = true;
-      fs3.readdir(self2._path, function(er, entries) {
+      fs4.readdir(self2._path, function(er, entries) {
         if (er) return self2.error(er);
         self2.entries = entries;
         self2.emit("entries", entries);
@@ -8685,20 +8685,20 @@ var require_dir_reader = __commonJS({
         }
         return;
       }
-      var p = path6.resolve(self2._path, self2.entries[self2._index]);
+      var p = path7.resolve(self2._path, self2.entries[self2._index]);
       assert(p !== self2._path);
       assert(self2.entries[self2._index]);
       self2._currentEntry = p;
-      fs3[self2.props.follow ? "stat" : "lstat"](p, function(er, stat) {
+      fs4[self2.props.follow ? "stat" : "lstat"](p, function(er, stat) {
         if (er) return self2.error(er);
         var who = self2._proxy || self2;
         stat.path = p;
-        stat.basename = path6.basename(p);
-        stat.dirname = path6.dirname(p);
+        stat.basename = path7.basename(p);
+        stat.dirname = path7.dirname(p);
         var childProps = self2.getChildProps.call(who, stat);
         childProps.path = p;
-        childProps.basename = path6.basename(p);
-        childProps.dirname = path6.dirname(p);
+        childProps.basename = path7.basename(p);
+        childProps.dirname = path7.dirname(p);
         var entry = Reader(childProps, stat);
         self2._currentEntry = entry;
         entry.on("pause", function(who2) {
@@ -8816,7 +8816,7 @@ var require_dir_reader = __commonJS({
 var require_file_reader = __commonJS({
   "node_modules/fstream/lib/file-reader.js"(exports2, module2) {
     module2.exports = FileReader;
-    var fs3 = require_graceful_fs();
+    var fs4 = require_graceful_fs();
     var inherits2 = require_inherits();
     var Reader = require_reader();
     var EOF = { EOF: true };
@@ -8836,7 +8836,7 @@ var require_file_reader = __commonJS({
     }
     FileReader.prototype._getStream = function() {
       var self2 = this;
-      var stream = self2._stream = fs3.createReadStream(self2._path, self2.props);
+      var stream = self2._stream = fs4.createReadStream(self2._path, self2.props);
       if (self2.props.blksize) {
         stream.bufferSize = self2.props.blksize;
       }
@@ -8957,7 +8957,7 @@ var require_proxy_reader = __commonJS({
     var Reader = require_reader();
     var getType = require_get_type();
     var inherits2 = require_inherits();
-    var fs3 = require_graceful_fs();
+    var fs4 = require_graceful_fs();
     inherits2(ProxyReader, Reader);
     function ProxyReader(props) {
       var self2 = this;
@@ -8973,7 +8973,7 @@ var require_proxy_reader = __commonJS({
       var self2 = this;
       var props = self2.props;
       var stat = props.follow ? "stat" : "lstat";
-      fs3[stat](props.path, function(er, current) {
+      fs4[stat](props.path, function(er, current) {
         var type;
         if (er || !current) {
           type = "File";
@@ -9032,10 +9032,10 @@ var require_proxy_reader = __commonJS({
 var require_reader = __commonJS({
   "node_modules/fstream/lib/reader.js"(exports2, module2) {
     module2.exports = Reader;
-    var fs3 = require_graceful_fs();
+    var fs4 = require_graceful_fs();
     var Stream = require("stream").Stream;
     var inherits2 = require_inherits();
-    var path6 = require("path");
+    var path7 = require("path");
     var getType = require_get_type();
     var hardLinks = Reader.hardLinks = {};
     var Abstract = require_abstract();
@@ -9100,7 +9100,7 @@ var require_reader = __commonJS({
       self2.depth = props.depth = props.depth || 0;
       self2.parent = props.parent || null;
       self2.root = props.root || props.parent && props.parent.root || self2;
-      self2._path = self2.path = path6.resolve(props.path);
+      self2._path = self2.path = path7.resolve(props.path);
       if (process.platform === "win32") {
         self2.path = self2._path = self2.path.replace(/\?/g, "_");
         if (self2._path.length >= 260) {
@@ -9108,8 +9108,8 @@ var require_reader = __commonJS({
           self2._path = "\\\\?\\" + self2.path.replace(/\//g, "\\");
         }
       }
-      self2.basename = props.basename = path6.basename(self2.path);
-      self2.dirname = props.dirname = path6.dirname(self2.path);
+      self2.basename = props.basename = path7.basename(self2.path);
+      self2.dirname = props.dirname = path7.dirname(self2.path);
       props.parent = props.root = null;
       self2.size = props.size;
       self2.filter = typeof props.filter === "function" ? props.filter : null;
@@ -9124,7 +9124,7 @@ var require_reader = __commonJS({
       var props = self2.props;
       var stat = props.follow ? "stat" : "lstat";
       if (currentStat) process.nextTick(statCb.bind(null, null, currentStat));
-      else fs3[stat](self2._path, statCb);
+      else fs4[stat](self2._path, statCb);
       function statCb(er, props_) {
         if (er) return self2.error(er);
         Object.keys(props_).forEach(function(k2) {
@@ -9218,7 +9218,7 @@ var require_old = __commonJS({
   "node_modules/fs.realpath/old.js"(exports2) {
     var pathModule = require("path");
     var isWindows = process.platform === "win32";
-    var fs3 = require("fs");
+    var fs4 = require("fs");
     var DEBUG = process.env.NODE_DEBUG && /fs/.test(process.env.NODE_DEBUG);
     function rethrow() {
       var callback;
@@ -9283,7 +9283,7 @@ var require_old = __commonJS({
         base = m[0];
         previous = "";
         if (isWindows && !knownHard[base]) {
-          fs3.lstatSync(base);
+          fs4.lstatSync(base);
           knownHard[base] = true;
         }
       }
@@ -9301,7 +9301,7 @@ var require_old = __commonJS({
         if (cache && Object.prototype.hasOwnProperty.call(cache, base)) {
           resolvedLink = cache[base];
         } else {
-          var stat = fs3.lstatSync(base);
+          var stat = fs4.lstatSync(base);
           if (!stat.isSymbolicLink()) {
             knownHard[base] = true;
             if (cache) cache[base] = base;
@@ -9315,8 +9315,8 @@ var require_old = __commonJS({
             }
           }
           if (linkTarget === null) {
-            fs3.statSync(base);
-            linkTarget = fs3.readlinkSync(base);
+            fs4.statSync(base);
+            linkTarget = fs4.readlinkSync(base);
           }
           resolvedLink = pathModule.resolve(previous, linkTarget);
           if (cache) cache[base] = resolvedLink;
@@ -9350,7 +9350,7 @@ var require_old = __commonJS({
         base = m[0];
         previous = "";
         if (isWindows && !knownHard[base]) {
-          fs3.lstat(base, function(err) {
+          fs4.lstat(base, function(err) {
             if (err) return cb(err);
             knownHard[base] = true;
             LOOP();
@@ -9376,7 +9376,7 @@ var require_old = __commonJS({
         if (cache && Object.prototype.hasOwnProperty.call(cache, base)) {
           return gotResolvedLink(cache[base]);
         }
-        return fs3.lstat(base, gotStat);
+        return fs4.lstat(base, gotStat);
       }
       function gotStat(err, stat) {
         if (err) return cb(err);
@@ -9391,9 +9391,9 @@ var require_old = __commonJS({
             return gotTarget(null, seenLinks[id], base);
           }
         }
-        fs3.stat(base, function(err2) {
+        fs4.stat(base, function(err2) {
           if (err2) return cb(err2);
-          fs3.readlink(base, function(err3, target) {
+          fs4.readlink(base, function(err3, target) {
             if (!isWindows) seenLinks[id] = target;
             gotTarget(err3, target);
           });
@@ -9422,9 +9422,9 @@ var require_fs = __commonJS({
     realpath.realpathSync = realpathSync;
     realpath.monkeypatch = monkeypatch;
     realpath.unmonkeypatch = unmonkeypatch;
-    var fs3 = require("fs");
-    var origRealpath = fs3.realpath;
-    var origRealpathSync = fs3.realpathSync;
+    var fs4 = require("fs");
+    var origRealpath = fs4.realpath;
+    var origRealpathSync = fs4.realpathSync;
     var version = process.version;
     var ok = /^v[0-5]\./.test(version);
     var old = require_old();
@@ -9462,12 +9462,12 @@ var require_fs = __commonJS({
       }
     }
     function monkeypatch() {
-      fs3.realpath = realpath;
-      fs3.realpathSync = realpathSync;
+      fs4.realpath = realpath;
+      fs4.realpathSync = realpathSync;
     }
     function unmonkeypatch() {
-      fs3.realpath = origRealpath;
-      fs3.realpathSync = origRealpathSync;
+      fs4.realpath = origRealpath;
+      fs4.realpathSync = origRealpathSync;
     }
   }
 });
@@ -9811,7 +9811,7 @@ var require_minimatch = __commonJS({
   "node_modules/minimatch/minimatch.js"(exports2, module2) {
     module2.exports = minimatch;
     minimatch.Minimatch = Minimatch;
-    var path6 = function() {
+    var path7 = function() {
       try {
         return require("path");
       } catch (e) {
@@ -9819,7 +9819,7 @@ var require_minimatch = __commonJS({
     }() || {
       sep: "/"
     };
-    minimatch.sep = path6.sep;
+    minimatch.sep = path7.sep;
     var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {};
     var expand = require_brace_expansion();
     var plTypes = {
@@ -9908,8 +9908,8 @@ var require_minimatch = __commonJS({
       assertValidPattern(pattern);
       if (!options) options = {};
       pattern = pattern.trim();
-      if (!options.allowWindowsEscape && path6.sep !== "/") {
-        pattern = pattern.split(path6.sep).join("/");
+      if (!options.allowWindowsEscape && path7.sep !== "/") {
+        pattern = pattern.split(path7.sep).join("/");
       }
       this.options = options;
       this.maxGlobstarRecursion = options.maxGlobstarRecursion !== void 0 ? options.maxGlobstarRecursion : 200;
@@ -10280,8 +10280,8 @@ var require_minimatch = __commonJS({
       if (this.empty) return f === "";
       if (f === "/" && partial) return true;
       var options = this.options;
-      if (path6.sep !== "/") {
-        f = f.split(path6.sep).join("/");
+      if (path7.sep !== "/") {
+        f = f.split(path7.sep).join("/");
       }
       f = f.split(slashSplit);
       this.debug(this.pattern, "split", f);
@@ -10482,12 +10482,12 @@ var require_minimatch = __commonJS({
 var require_path_is_absolute = __commonJS({
   "node_modules/path-is-absolute/index.js"(exports2, module2) {
     "use strict";
-    function posix(path6) {
-      return path6.charAt(0) === "/";
+    function posix(path7) {
+      return path7.charAt(0) === "/";
     }
-    function win32(path6) {
+    function win32(path7) {
       var splitDeviceRe = /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
-      var result = splitDeviceRe.exec(path6);
+      var result = splitDeviceRe.exec(path7);
       var device = result[1] || "";
       var isUnc = Boolean(device && device.charAt(1) !== ":");
       return Boolean(result[2] || isUnc);
@@ -10511,8 +10511,8 @@ var require_common = __commonJS({
     function ownProp(obj2, field) {
       return Object.prototype.hasOwnProperty.call(obj2, field);
     }
-    var fs3 = require("fs");
-    var path6 = require("path");
+    var fs4 = require("fs");
+    var path7 = require("path");
     var minimatch = require_minimatch();
     var isAbsolute = require_path_is_absolute();
     var Minimatch = minimatch.Minimatch;
@@ -10566,7 +10566,7 @@ var require_common = __commonJS({
       self2.stat = !!options.stat;
       self2.noprocess = !!options.noprocess;
       self2.absolute = !!options.absolute;
-      self2.fs = options.fs || fs3;
+      self2.fs = options.fs || fs4;
       self2.maxLength = options.maxLength || Infinity;
       self2.cache = options.cache || /* @__PURE__ */ Object.create(null);
       self2.statCache = options.statCache || /* @__PURE__ */ Object.create(null);
@@ -10577,11 +10577,11 @@ var require_common = __commonJS({
       if (!ownProp(options, "cwd"))
         self2.cwd = cwd;
       else {
-        self2.cwd = path6.resolve(options.cwd);
+        self2.cwd = path7.resolve(options.cwd);
         self2.changedCwd = self2.cwd !== cwd;
       }
-      self2.root = options.root || path6.resolve(self2.cwd, "/");
-      self2.root = path6.resolve(self2.root);
+      self2.root = options.root || path7.resolve(self2.cwd, "/");
+      self2.root = path7.resolve(self2.root);
       if (process.platform === "win32")
         self2.root = self2.root.replace(/\\/g, "/");
       self2.cwdAbs = isAbsolute(self2.cwd) ? self2.cwd : makeAbs(self2, self2.cwd);
@@ -10663,30 +10663,30 @@ var require_common = __commonJS({
     function makeAbs(self2, f) {
       var abs = f;
       if (f.charAt(0) === "/") {
-        abs = path6.join(self2.root, f);
+        abs = path7.join(self2.root, f);
       } else if (isAbsolute(f) || f === "") {
         abs = f;
       } else if (self2.changedCwd) {
-        abs = path6.resolve(self2.cwd, f);
+        abs = path7.resolve(self2.cwd, f);
       } else {
-        abs = path6.resolve(f);
+        abs = path7.resolve(f);
       }
       if (process.platform === "win32")
         abs = abs.replace(/\\/g, "/");
       return abs;
     }
-    function isIgnored(self2, path7) {
+    function isIgnored(self2, path8) {
       if (!self2.ignore.length)
         return false;
       return self2.ignore.some(function(item) {
-        return item.matcher.match(path7) || !!(item.gmatcher && item.gmatcher.match(path7));
+        return item.matcher.match(path8) || !!(item.gmatcher && item.gmatcher.match(path8));
       });
     }
-    function childrenIgnored(self2, path7) {
+    function childrenIgnored(self2, path8) {
       if (!self2.ignore.length)
         return false;
       return self2.ignore.some(function(item) {
-        return !!(item.gmatcher && item.gmatcher.match(path7));
+        return !!(item.gmatcher && item.gmatcher.match(path8));
       });
     }
   }
@@ -10702,7 +10702,7 @@ var require_sync = __commonJS({
     var Minimatch = minimatch.Minimatch;
     var Glob = require_glob().Glob;
     var util = require("util");
-    var path6 = require("path");
+    var path7 = require("path");
     var assert = require("assert");
     var isAbsolute = require_path_is_absolute();
     var common = require_common();
@@ -10831,7 +10831,7 @@ var require_sync = __commonJS({
               e = prefix + e;
           }
           if (e.charAt(0) === "/" && !this.nomount) {
-            e = path6.join(this.root, e);
+            e = path7.join(this.root, e);
           }
           this._emitMatch(index, e);
         }
@@ -10982,9 +10982,9 @@ var require_sync = __commonJS({
       if (prefix && isAbsolute(prefix) && !this.nomount) {
         var trail = /[\/\\]$/.test(prefix);
         if (prefix.charAt(0) === "/") {
-          prefix = path6.join(this.root, prefix);
+          prefix = path7.join(this.root, prefix);
         } else {
-          prefix = path6.resolve(this.root, prefix);
+          prefix = path7.resolve(this.root, prefix);
           if (trail)
             prefix += "/";
         }
@@ -11176,7 +11176,7 @@ var require_glob = __commonJS({
     var Minimatch = minimatch.Minimatch;
     var inherits2 = require_inherits();
     var EE = require("events").EventEmitter;
-    var path6 = require("path");
+    var path7 = require("path");
     var assert = require("assert");
     var isAbsolute = require_path_is_absolute();
     var globSync = require_sync();
@@ -11458,7 +11458,7 @@ var require_glob = __commonJS({
               e = prefix + e;
           }
           if (e.charAt(0) === "/" && !this.nomount) {
-            e = path6.join(this.root, e);
+            e = path7.join(this.root, e);
           }
           this._emitMatch(index, e);
         }
@@ -11647,9 +11647,9 @@ var require_glob = __commonJS({
       if (prefix && isAbsolute(prefix) && !this.nomount) {
         var trail = /[\/\\]$/.test(prefix);
         if (prefix.charAt(0) === "/") {
-          prefix = path6.join(this.root, prefix);
+          prefix = path7.join(this.root, prefix);
         } else {
-          prefix = path6.resolve(this.root, prefix);
+          prefix = path7.resolve(this.root, prefix);
           if (trail)
             prefix += "/";
         }
@@ -11729,8 +11729,8 @@ var require_rimraf = __commonJS({
     module2.exports = rimraf;
     rimraf.sync = rimrafSync;
     var assert = require("assert");
-    var path6 = require("path");
-    var fs3 = require("fs");
+    var path7 = require("path");
+    var fs4 = require("fs");
     var glob = void 0;
     try {
       glob = require_glob();
@@ -11753,9 +11753,9 @@ var require_rimraf = __commonJS({
         "readdir"
       ];
       methods.forEach(function(m) {
-        options[m] = options[m] || fs3[m];
+        options[m] = options[m] || fs4[m];
         m = m + "Sync";
-        options[m] = options[m] || fs3[m];
+        options[m] = options[m] || fs4[m];
       });
       options.maxBusyTries = options.maxBusyTries || 3;
       options.emfileWait = options.emfileWait || 1e3;
@@ -11920,7 +11920,7 @@ var require_rimraf = __commonJS({
           return options.rmdir(p, cb);
         var errState;
         files.forEach(function(f) {
-          rimraf(path6.join(p, f), options, function(er2) {
+          rimraf(path7.join(p, f), options, function(er2) {
             if (errState)
               return;
             if (er2)
@@ -11997,7 +11997,7 @@ var require_rimraf = __commonJS({
       assert(p);
       assert(options);
       options.readdirSync(p).forEach(function(f) {
-        rimrafSync(path6.join(p, f), options);
+        rimrafSync(path7.join(p, f), options);
       });
       var retries = isWindows ? 100 : 1;
       var i = 0;
@@ -12019,8 +12019,8 @@ var require_rimraf = __commonJS({
 // node_modules/mkdirp/index.js
 var require_mkdirp = __commonJS({
   "node_modules/mkdirp/index.js"(exports2, module2) {
-    var path6 = require("path");
-    var fs3 = require("fs");
+    var path7 = require("path");
+    var fs4 = require("fs");
     var _0777 = parseInt("0777", 8);
     module2.exports = mkdirP.mkdirp = mkdirP.mkdirP = mkdirP;
     function mkdirP(p, opts, f, made) {
@@ -12031,7 +12031,7 @@ var require_mkdirp = __commonJS({
         opts = { mode: opts };
       }
       var mode = opts.mode;
-      var xfs = opts.fs || fs3;
+      var xfs = opts.fs || fs4;
       if (mode === void 0) {
         mode = _0777;
       }
@@ -12039,7 +12039,7 @@ var require_mkdirp = __commonJS({
       var cb = f || /* istanbul ignore next */
       function() {
       };
-      p = path6.resolve(p);
+      p = path7.resolve(p);
       xfs.mkdir(p, mode, function(er) {
         if (!er) {
           made = made || p;
@@ -12047,8 +12047,8 @@ var require_mkdirp = __commonJS({
         }
         switch (er.code) {
           case "ENOENT":
-            if (path6.dirname(p) === p) return cb(er);
-            mkdirP(path6.dirname(p), opts, function(er2, made2) {
+            if (path7.dirname(p) === p) return cb(er);
+            mkdirP(path7.dirname(p), opts, function(er2, made2) {
               if (er2) cb(er2, made2);
               else mkdirP(p, opts, cb, made2);
             });
@@ -12070,19 +12070,19 @@ var require_mkdirp = __commonJS({
         opts = { mode: opts };
       }
       var mode = opts.mode;
-      var xfs = opts.fs || fs3;
+      var xfs = opts.fs || fs4;
       if (mode === void 0) {
         mode = _0777;
       }
       if (!made) made = null;
-      p = path6.resolve(p);
+      p = path7.resolve(p);
       try {
         xfs.mkdirSync(p, mode);
         made = made || p;
       } catch (err0) {
         switch (err0.code) {
           case "ENOENT":
-            made = sync(path6.dirname(p), opts, made);
+            made = sync(path7.dirname(p), opts, made);
             sync(p, opts, made);
             break;
           // In the case of any other error, just see if there's a dir
@@ -12167,7 +12167,7 @@ var require_dir_writer = __commonJS({
     var Writer = require_writer();
     var inherits2 = require_inherits();
     var mkdir = require_mkdirp();
-    var path6 = require("path");
+    var path7 = require("path");
     var collect = require_collect();
     inherits2(DirWriter, Writer);
     function DirWriter(props) {
@@ -12242,7 +12242,7 @@ var require_dir_writer = __commonJS({
       if (entry.parent) {
         pp = pp.substr(entry.parent._path.length + 1);
       }
-      props.path = path6.join(self2.path, path6.join("/", pp));
+      props.path = path7.join(self2.path, path7.join("/", pp));
       props.filter = self2.filter;
       Object.keys(entry.props).forEach(function(k) {
         if (!props.hasOwnProperty(k)) {
@@ -12280,10 +12280,10 @@ var require_dir_writer = __commonJS({
 var require_link_writer = __commonJS({
   "node_modules/fstream/lib/link-writer.js"(exports2, module2) {
     module2.exports = LinkWriter;
-    var fs3 = require_graceful_fs();
+    var fs4 = require_graceful_fs();
     var Writer = require_writer();
     var inherits2 = require_inherits();
-    var path6 = require("path");
+    var path7 = require("path");
     var rimraf = require_rimraf();
     inherits2(LinkWriter, Writer);
     function LinkWriter(props) {
@@ -12304,9 +12304,9 @@ var require_link_writer = __commonJS({
       var self2 = this;
       var hard = self2.type === "Link" || process.platform === "win32";
       var link = hard ? "link" : "symlink";
-      var lp = hard ? path6.resolve(self2.dirname, self2.linkpath) : self2.linkpath;
+      var lp = hard ? path7.resolve(self2.dirname, self2.linkpath) : self2.linkpath;
       if (hard) return clobber(self2, lp, link);
-      fs3.readlink(self2._path, function(er, p) {
+      fs4.readlink(self2._path, function(er, p) {
         if (p && p === lp) return finish(self2);
         clobber(self2, lp, link);
       });
@@ -12318,7 +12318,7 @@ var require_link_writer = __commonJS({
       });
     }
     function create(self2, lp, link) {
-      fs3[link](lp, self2._path, function(er) {
+      fs4[link](lp, self2._path, function(er) {
         if (er) {
           if ((er.code === "ENOENT" || er.code === "EACCES" || er.code === "EPERM") && process.platform === "win32") {
             self2.ready = true;
@@ -12351,7 +12351,7 @@ var require_link_writer = __commonJS({
 var require_file_writer = __commonJS({
   "node_modules/fstream/lib/file-writer.js"(exports2, module2) {
     module2.exports = FileWriter;
-    var fs3 = require_graceful_fs();
+    var fs4 = require_graceful_fs();
     var Writer = require_writer();
     var inherits2 = require_inherits();
     var EOF = {};
@@ -12375,7 +12375,7 @@ var require_file_writer = __commonJS({
       if (self2.props.flags) so.flags = self2.props.flags;
       so.mode = Writer.filemode;
       if (self2._old && self2._old.blksize) so.bufferSize = self2._old.blksize;
-      self2._stream = fs3.createWriteStream(self2._path, so);
+      self2._stream = fs4.createWriteStream(self2._path, so);
       self2._stream.on("open", function() {
         self2.ready = true;
         self2._buffer.forEach(function(c) {
@@ -12441,7 +12441,7 @@ var require_proxy_writer = __commonJS({
     var getType = require_get_type();
     var inherits2 = require_inherits();
     var collect = require_collect();
-    var fs3 = require("fs");
+    var fs4 = require("fs");
     inherits2(ProxyWriter, Writer);
     function ProxyWriter(props) {
       var self2 = this;
@@ -12456,7 +12456,7 @@ var require_proxy_writer = __commonJS({
       var self2 = this;
       var props = self2.props;
       var stat = props.follow ? "stat" : "lstat";
-      fs3[stat](props.path, function(er, current) {
+      fs4[stat](props.path, function(er, current) {
         var type;
         if (er || !current) {
           type = "File";
@@ -12524,11 +12524,11 @@ var require_proxy_writer = __commonJS({
 var require_writer = __commonJS({
   "node_modules/fstream/lib/writer.js"(exports2, module2) {
     module2.exports = Writer;
-    var fs3 = require_graceful_fs();
+    var fs4 = require_graceful_fs();
     var inherits2 = require_inherits();
     var rimraf = require_rimraf();
     var mkdir = require_mkdirp();
-    var path6 = require("path");
+    var path7 = require("path");
     var umask = process.platform === "win32" ? 0 : process.umask();
     var getType = require_get_type();
     var Abstract = require_abstract();
@@ -12571,7 +12571,7 @@ var require_writer = __commonJS({
       self2.clobber = props.clobber === false ? props.clobber : true;
       self2.parent = props.parent || null;
       self2.root = props.root || props.parent && props.parent.root || self2;
-      self2._path = self2.path = path6.resolve(props.path);
+      self2._path = self2.path = path7.resolve(props.path);
       if (process.platform === "win32") {
         self2.path = self2._path = self2.path.replace(/\?/g, "_");
         if (self2._path.length >= 260) {
@@ -12579,8 +12579,8 @@ var require_writer = __commonJS({
           self2._path = "\\\\?\\" + self2.path.replace(/\//g, "\\");
         }
       }
-      self2.basename = path6.basename(props.path);
-      self2.dirname = path6.dirname(props.path);
+      self2.basename = path7.basename(props.path);
+      self2.dirname = path7.dirname(props.path);
       self2.linkpath = props.linkpath || null;
       props.parent = props.root = null;
       self2.size = props.size;
@@ -12596,7 +12596,7 @@ var require_writer = __commonJS({
     }
     Writer.prototype._create = function() {
       var self2 = this;
-      fs3[self2.props.follow ? "stat" : "lstat"](self2._path, function(er) {
+      fs4[self2.props.follow ? "stat" : "lstat"](self2._path, function(er) {
         if (er) {
           return self2.warn("Cannot create " + self2._path + "\nUnsupported type: " + self2.type, "ENOTSUP");
         }
@@ -12609,7 +12609,7 @@ var require_writer = __commonJS({
       var stat = props.follow ? "stat" : "lstat";
       var who = self2._proxy || self2;
       if (current) statCb(null, current);
-      else fs3[stat](self2._path, statCb);
+      else fs4[stat](self2._path, statCb);
       function statCb(er, current2) {
         if (self2.filter && !self2.filter.call(who, who, current2)) {
           self2._aborted = true;
@@ -12633,40 +12633,40 @@ var require_writer = __commonJS({
       }
     };
     function create(self2) {
-      mkdir(path6.dirname(self2._path), Writer.dirmode, function(er, made) {
+      mkdir(path7.dirname(self2._path), Writer.dirmode, function(er, made) {
         if (er) return self2.error(er);
         self2._madeDir = made;
         return self2._create();
       });
     }
-    function endChmod(self2, want, current, path7, cb) {
+    function endChmod(self2, want, current, path8, cb) {
       var wantMode = want.mode;
       var chmod = want.follow || self2.type !== "SymbolicLink" ? "chmod" : "lchmod";
-      if (!fs3[chmod]) return cb();
+      if (!fs4[chmod]) return cb();
       if (typeof wantMode !== "number") return cb();
       var curMode = current.mode & parseInt("0777", 8);
       wantMode = wantMode & parseInt("0777", 8);
       if (wantMode === curMode) return cb();
-      fs3[chmod](path7, wantMode, cb);
+      fs4[chmod](path8, wantMode, cb);
     }
-    function endChown(self2, want, current, path7, cb) {
+    function endChown(self2, want, current, path8, cb) {
       if (process.platform === "win32") return cb();
       if (!process.getuid || process.getuid() !== 0) return cb();
       if (typeof want.uid !== "number" && typeof want.gid !== "number") return cb();
       if (current.uid === want.uid && current.gid === want.gid) return cb();
       var chown = self2.props.follow || self2.type !== "SymbolicLink" ? "chown" : "lchown";
-      if (!fs3[chown]) return cb();
+      if (!fs4[chown]) return cb();
       if (typeof want.uid !== "number") want.uid = current.uid;
       if (typeof want.gid !== "number") want.gid = current.gid;
-      fs3[chown](path7, want.uid, want.gid, cb);
+      fs4[chown](path8, want.uid, want.gid, cb);
     }
-    function endUtimes(self2, want, current, path7, cb) {
-      if (!fs3.utimes || process.platform === "win32") return cb();
+    function endUtimes(self2, want, current, path8, cb) {
+      if (!fs4.utimes || process.platform === "win32") return cb();
       var utimes = want.follow || self2.type !== "SymbolicLink" ? "utimes" : "lutimes";
-      if (utimes === "lutimes" && !fs3[utimes]) {
+      if (utimes === "lutimes" && !fs4[utimes]) {
         utimes = "utimes";
       }
-      if (!fs3[utimes]) return cb();
+      if (!fs4[utimes]) return cb();
       var curA = current.atime;
       var curM = current.mtime;
       var meA = want.atime;
@@ -12676,7 +12676,7 @@ var require_writer = __commonJS({
       if (!isDate(meA)) meA = new Date(meA);
       if (!isDate(meM)) meA = new Date(meM);
       if (meA.getTime() === curA.getTime() && meM.getTime() === curM.getTime()) return cb();
-      fs3[utimes](path7, meA, meM, cb);
+      fs4[utimes](path8, meA, meM, cb);
     }
     Writer.prototype._finish = function() {
       var self2 = this;
@@ -12691,7 +12691,7 @@ var require_writer = __commonJS({
         setProps(self2._old);
       } else {
         var stat = self2.props.follow ? "stat" : "lstat";
-        fs3[stat](self2._path, function(er, current) {
+        fs4[stat](self2._path, function(er, current) {
           if (er) {
             if (er.code === "ENOENT" && (self2.type === "Link" || self2.type === "SymbolicLink") && process.platform === "win32") {
               self2.ready = true;
@@ -12738,7 +12738,7 @@ var require_writer = __commonJS({
     };
     function endMadeDir(self2, p, cb) {
       var made = self2._madeDir;
-      var d = path6.dirname(p);
+      var d = path7.dirname(p);
       endMadeDir_(self2, d, function(er) {
         if (er) return cb(er);
         if (d === made) {
@@ -12757,7 +12757,7 @@ var require_writer = __commonJS({
       });
       var todo = 3;
       var errState = null;
-      fs3.stat(p, function(er, current) {
+      fs4.stat(p, function(er, current) {
         if (er) return cb(errState = er);
         endChmod(self2, dirProps, current, p, next);
         endChown(self2, dirProps, current, p, next);
@@ -12827,17 +12827,17 @@ var require_extract = __commonJS({
     module2.exports = Extract;
     var Parse2 = require_parse();
     var Writer = require_fstream().Writer;
-    var path6 = require("path");
+    var path7 = require("path");
     var stream = require("stream");
     var duplexer2 = require_duplexer2();
     var Promise2 = require_bluebird();
     function Extract(opts) {
-      opts.path = path6.resolve(path6.normalize(opts.path));
+      opts.path = path7.resolve(path7.normalize(opts.path));
       var parser = new Parse2(opts);
       var outStream = new stream.Writable({ objectMode: true });
       outStream._write = function(entry, encoding, cb) {
         if (entry.type == "Directory") return cb();
-        var extractPath = path6.join(opts.path, entry.path.replace(/\\/g, "/"));
+        var extractPath = path7.join(opts.path, entry.path.replace(/\\/g, "/"));
         if (extractPath.indexOf(opts.path) != 0) {
           return cb();
         }
@@ -14279,7 +14279,7 @@ var require_directory = __commonJS({
     var Promise2 = require_bluebird();
     var BufferStream = require_BufferStream();
     var parseExtraField = require_parseExtraField();
-    var path6 = require("path");
+    var path7 = require("path");
     var Writer = require_fstream().Writer;
     var parseDateTime = require_parseDateTime();
     var parseBuffer = require_parseBuffer();
@@ -14386,11 +14386,11 @@ var require_directory = __commonJS({
         source.stream(vars.offsetToStartOfCentralDirectory).pipe(records);
         vars.extract = function(opts) {
           if (!opts || !opts.path) throw new Error("PATH_MISSING");
-          opts.path = path6.resolve(path6.normalize(opts.path));
+          opts.path = path7.resolve(path7.normalize(opts.path));
           return vars.files.then(function(files) {
             return Promise2.map(files, function(entry) {
               if (entry.type == "Directory") return;
-              var extractPath = path6.join(opts.path, entry.path);
+              var extractPath = path7.join(opts.path, entry.path);
               if (extractPath.indexOf(opts.path) != 0) {
                 return;
               }
@@ -14456,7 +14456,7 @@ var require_directory = __commonJS({
 // node_modules/unzipper/lib/Open/index.js
 var require_Open = __commonJS({
   "node_modules/unzipper/lib/Open/index.js"(exports2, module2) {
-    var fs3 = require_graceful_fs();
+    var fs4 = require_graceful_fs();
     var Promise2 = require_bluebird();
     var directory = require_directory();
     var Stream = require("stream");
@@ -14479,11 +14479,11 @@ var require_Open = __commonJS({
         var source = {
           stream: function(start, length) {
             var end = length ? start + length : void 0;
-            return fs3.createReadStream(filename, { start, end });
+            return fs4.createReadStream(filename, { start, end });
           },
           size: function() {
             return new Promise2(function(resolve, reject) {
-              fs3.stat(filename, function(err, d) {
+              fs4.stat(filename, function(err, d) {
                 if (err)
                   reject(err);
                 else
@@ -14569,11 +14569,11 @@ var require_which = __commonJS({
   "node_modules/find-java-home/node_modules/which/which.js"(exports2, module2) {
     module2.exports = which;
     which.sync = whichSync;
-    var path6 = require("path");
-    var fs3;
+    var path7 = require("path");
+    var fs4;
     var COLON = process.platform === "win32" ? ";" : ":";
     var isExe;
-    var fs3 = require("fs");
+    var fs4 = require("fs");
     if (process.platform == "win32") {
       isExe = function isExe2() {
         return true;
@@ -14595,11 +14595,11 @@ var require_which = __commonJS({
       ;
       (function F(i, l2) {
         if (i === l2) return cb(new Error("not found: " + cmd));
-        var p = path6.resolve(pathEnv[i], cmd);
+        var p = path7.resolve(pathEnv[i], cmd);
         (function E(ii, ll) {
           if (ii === ll) return F(i + 1, l2);
           var ext = pathExt[ii];
-          fs3.stat(p + ext, function(er, stat) {
+          fs4.stat(p + ext, function(er, stat) {
             if (!er && stat && stat.isFile() && isExe(stat.mode, stat.uid, stat.gid)) {
               return cb(null, p + ext);
             }
@@ -14617,12 +14617,12 @@ var require_which = __commonJS({
         if (cmd.indexOf(".") !== -1) pathExt.unshift("");
       }
       for (var i = 0, l2 = pathEnv.length; i < l2; i++) {
-        var p = path6.join(pathEnv[i], cmd);
+        var p = path7.join(pathEnv[i], cmd);
         for (var j = 0, ll = pathExt.length; j < ll; j++) {
           var cur = p + pathExt[j];
           var stat;
           try {
-            stat = fs3.statSync(cur);
+            stat = fs4.statSync(cur);
           } catch (ex) {
           }
           if (stat && stat.isFile() && isExe(stat.mode, stat.uid, stat.gid)) return cur;
@@ -14646,7 +14646,7 @@ var require_which = __commonJS({
 var require_registry = __commonJS({
   "node_modules/winreg/lib/registry.js"(exports2, module2) {
     var util = require("util");
-    var path6 = require("path");
+    var path7 = require("path");
     var spawn = require("child_process").spawn;
     var log = function() {
     };
@@ -14715,7 +14715,7 @@ var require_registry = __commonJS({
     }
     function getRegExePath() {
       if (process.platform === "win32") {
-        return path6.join(process.env.windir, "system32", "reg.exe");
+        return path7.join(process.env.windir, "system32", "reg.exe");
       } else {
         return "REG";
       }
@@ -15264,8 +15264,8 @@ var require_dist = __commonJS({
     var __importDefault = exports2 && exports2.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
     };
-    var fs3 = __importStar(require("fs"));
-    var path6 = __importStar(require("path"));
+    var fs4 = __importStar(require("fs"));
+    var path7 = __importStar(require("path"));
     var cp = __importStar(require("child_process"));
     var child_process_1 = require("child_process");
     var which_1 = __importDefault(require_which());
@@ -15357,10 +15357,10 @@ var require_dist = __commonJS({
               console.error(ex);
             }
           }
-          proposed = fs3.realpathSync(proposed);
-          proposed = path6.dirname(proposed);
-          var macUtility = path6.resolve(proposed, "java_home");
-          if (fs3.existsSync(macUtility)) {
+          proposed = fs4.realpathSync(proposed);
+          proposed = path7.dirname(proposed);
+          var macUtility = path7.resolve(proposed, "java_home");
+          if (fs4.existsSync(macUtility)) {
             var buffer = void 0;
             try {
               buffer = cp.execSync(macUtility, { cwd: proposed });
@@ -15370,7 +15370,7 @@ var require_dist = __commonJS({
               return resolve(null);
             }
           }
-          resolve(path6.dirname(proposed));
+          resolve(path7.dirname(proposed));
         });
       });
     }
@@ -15448,7 +15448,7 @@ var require_dist = __commonJS({
       });
     }
     function dirIsJavaHome(dir, javaFilename) {
-      return fs3.existsSync("" + dir) && fs3.statSync(dir).isDirectory() && fs3.existsSync(path6.resolve(dir, "bin", javaFilename));
+      return fs4.existsSync("" + dir) && fs4.statSync(dir).isDirectory() && fs4.existsSync(path7.resolve(dir, "bin", javaFilename));
     }
     module2.exports = findJavaHome2;
   }
@@ -15461,8 +15461,8 @@ __export(extension_exports, {
   deactivate: () => deactivate
 });
 module.exports = __toCommonJS(extension_exports);
-var vscode5 = __toESM(require("vscode"));
-var path5 = __toESM(require("path"));
+var vscode6 = __toESM(require("vscode"));
+var path6 = __toESM(require("path"));
 
 // src/ltsa/ltsaProvider.ts
 var vscode = __toESM(require("vscode"));
@@ -15633,116 +15633,333 @@ var LtsaRunner = class {
 // src/webview/graphPanel.ts
 var vscode2 = __toESM(require("vscode"));
 var path4 = __toESM(require("path"));
+var fs3 = __toESM(require("fs"));
+
+// src/webview/htmlBuilder.ts
+function buildWebviewHtml(options) {
+  const cspMeta = options.cspSource ? `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${options.cspSource} data: blob:; style-src ${options.cspSource} 'unsafe-inline'; script-src 'nonce-${options.nonce}';">` : "";
+  return `<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    ${cspMeta}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FSP Studio</title>
+    <link href="${options.styleUri}" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Main Toolbar -->
+    <div id="toolbar">
+        <div class="toolbar-group">
+            <span class="toolbar-label">Target:</span>
+            <select id="processSelect" title="Seleziona processo o composizione da visualizzare"></select>
+        </div>
+        <div class="toolbar-group">
+            <span class="toolbar-label">Layout:</span>
+            <select id="layoutSelect" title="Algoritmo di disposizione del grafo">
+                <option value="dagre-lr">Orizzontale (Left \u2192 Right)</option>
+                <option value="dagre-tb">Verticale (Top \u2192 Bottom)</option>
+                <option value="breadthfirst">Gerarchico ad Albero</option>
+                <option value="concentric">Concentrico</option>
+                <option value="cose">Organico (Force-Directed)</option>
+            </select>
+        </div>
+        <div class="toolbar-group">
+            <span class="toolbar-label">Stati:</span>
+            <select id="labelSelect" title="Modalit\xE0 di visualizzazione etichette stati">
+                <option value="matrix" selected>Matrice / Gruppi ([COFFEE, 1])</option>
+                <option value="compact">Solo Valori ([COFFEE, 1])</option>
+                <option value="name">Nome completo (MAKING[COFFEE][1])</option>
+                <option value="both">ID + Nome</option>
+                <option value="id">Solo ID</option>
+            </select>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Navigation & Filter Controls -->
+        <div class="toolbar-group">
+            <button id="btnFit" title="Centra e adatta il grafo alla finestra">\u{1F3AF} Centra</button>
+            <button id="btnZoomIn" title="Ingrandisci (Zoom in)">\uFF0B</button>
+            <button id="btnZoomOut" title="Rimpicciolisci (Zoom out)">\uFF0D</button>
+            <button id="btnToggleError" class="btn-toggle" title="Nascondi o mostra lo stato ERROR e le transizioni di errore per pulire il grafo">\u{1F6AB} Nascondi ERROR</button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Interactive Simulator & Formal Verification -->
+        <div class="toolbar-group">
+            <button id="btnSimulate" class="btn-accent" title="Attiva/Disattiva Simulatore Interattivo Passo-Passo">\u{1F3AE} Simula</button>
+            <button id="btnCheckSafety" title="Verifica Safety & Deadlock e mostra eventuale controesempio sul grafo">\u{1F6E1}\uFE0F Safety</button>
+            <button id="btnCheckProgress" title="Verifica Progress e Liveness">\u{1F504} Progress</button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Export & Live Sync -->
+        <div class="toolbar-group">
+            <button id="btnExportPng" title="Esporta grafo in PNG ad alta risoluzione">\u{1F4F7} PNG</button>
+            <button id="btnExportSvg" title="Esporta grafo in formato vettoriale SVG">\u{1F4D0} SVG</button>
+            <button id="btnLiveSync" class="btn-toggle active" title="Aggiornamento automatico in tempo reale mentre scrivi codice FSP">\u26A1 Live</button>
+        </div>
+
+        <span id="stateCount"></span>
+    </div>
+
+    <!-- Verification / Counterexample Trace Banner (hidden by default) -->
+    <div id="traceBanner" class="banner hidden">
+        <div class="banner-header">
+            <span id="traceBannerTitle" class="banner-title"></span>
+            <div class="banner-actions">
+                <button id="btnReplayTrace" class="btn-small" title="Riproduci la traccia nel simulatore">\u25B6\uFE0F Simula Traccia</button>
+                <button id="btnClearTrace" class="btn-small" title="Nascondi evidenziazione traccia">\u2715 Chiudi</button>
+            </div>
+        </div>
+        <div id="traceStepsContainer" class="trace-steps"></div>
+    </div>
+
+    <!-- Main Cytoscape Graph Canvas -->
+    <div id="cy"></div>
+
+    <!-- Interactive Simulator / Animator Drawer (hidden by default) -->
+    <div id="simulatorPanel" class="sim-panel hidden">
+        <div class="sim-header">
+            <div class="sim-status">
+                <span class="sim-badge">\u{1F3AE} SIMULATORE</span>
+                <span class="sim-state-label">Stato corrente: <strong id="simCurrentState">0</strong></span>
+                <span id="simStateStatusBadge" class="state-pill"></span>
+            </div>
+            <div class="sim-controls">
+                <button id="btnSimStepBack" title="Torna allo stato precedente" disabled>\u23EA Indietro</button>
+                <button id="btnSimReset" title="Torna allo stato iniziale (0)">\u23EE Reset</button>
+                <button id="btnSimClose" title="Esci dalla modalit\xE0 simulatore">\u2715 Esci</button>
+            </div>
+        </div>
+        <div class="sim-body">
+            <div class="sim-actions-row">
+                <span class="sim-section-title">Azioni abilitate (clicca qui o sul grafo):</span>
+                <div id="simActionsList" class="sim-actions-list"></div>
+            </div>
+            <div class="sim-trace-row">
+                <span class="sim-section-title">Percorso (<span id="simStepCount">0</span> passi):</span>
+                <div id="simHistoryBreadcrumb" class="sim-breadcrumb"></div>
+            </div>
+        </div>
+    </div>
+
+    <script nonce="${options.nonce}">
+        window.__INITIAL_PROCESSES__ = ${options.initialProcessesJson};
+    </script>
+    <script nonce="${options.nonce}" src="${options.cytoscapeUri}"></script>
+    <script nonce="${options.nonce}" src="${options.dagreUri}"></script>
+    <script nonce="${options.nonce}" src="${options.cytoscapeDagreUri}"></script>
+    <script nonce="${options.nonce}" src="${options.scriptUri}"></script>
+</body>
+</html>`;
+}
+
+// src/webview/graphPanel.ts
 var GraphPanel = class _GraphPanel {
   static currentPanel;
   _panel;
   _extensionUri;
   _processes = [];
-  constructor(panel, extensionUri) {
+  _allTargets = [];
+  _activeTarget;
+  _activeDocUri;
+  _liveSyncEnabled = true;
+  _isWebviewReady = false;
+  _pendingSimulation = false;
+  _pendingTrace;
+  _callbacks = {};
+  constructor(panel, extensionUri, callbacks) {
     this._panel = panel;
     this._extensionUri = extensionUri;
+    if (callbacks) {
+      this._callbacks = callbacks;
+    }
+    this._panel.webview.html = this._getHtmlForWebview(this._panel.webview);
     this._panel.onDidDispose(() => this.dispose(), null);
-    this._panel.webview.onDidReceiveMessage((message) => {
-      if (message.command === "ready") {
-        this._panel.webview.postMessage({
-          command: "loadProcesses",
-          processes: this._processes
-        });
+    this._panel.webview.onDidReceiveMessage(async (message) => {
+      if (!message) return;
+      switch (message.command) {
+        case "ready":
+          this._isWebviewReady = true;
+          this._sendLoadMessage(false);
+          if (this._pendingSimulation) {
+            this._pendingSimulation = false;
+            this._panel.webview.postMessage({ command: "startSimulation" });
+          }
+          if (this._pendingTrace) {
+            const tr = this._pendingTrace;
+            this._pendingTrace = void 0;
+            this._panel.webview.postMessage({
+              command: "highlightTrace",
+              trace: tr.trace,
+              verdict: tr.verdict,
+              mode: tr.mode,
+              target: tr.target
+            });
+          }
+          break;
+        case "selectTarget":
+          if (message.target && this._callbacks.onSelectTarget) {
+            this._activeTarget = message.target;
+            await this._callbacks.onSelectTarget(message.target);
+          }
+          break;
+        case "runCheck":
+          if (message.mode && this._callbacks.onRunCheck) {
+            const targetToUse = message.target || this._activeTarget;
+            if (targetToUse) {
+              await this._callbacks.onRunCheck(message.mode, targetToUse);
+            }
+          }
+          break;
+        case "toggleLiveSync":
+          this._liveSyncEnabled = !!message.enabled;
+          break;
+        case "exportImage":
+          await this._handleExportImage(message.format, message.data, message.targetName);
+          break;
       }
     });
   }
-  static createOrShow(extensionUri, processes, title) {
-    const column = vscode2.window.activeTextEditor ? vscode2.ViewColumn.Beside : vscode2.ViewColumn.One;
+  static createOrShow(extensionUri, processes, title, allTargets, docUri, callbacks, preserveColumnFocus = false) {
+    const column = vscode2.window.activeTextEditor ? vscode2.ViewColumn.Beside : vscode2.ViewColumn.Two;
     if (_GraphPanel.currentPanel) {
-      _GraphPanel.currentPanel._panel.reveal(column);
-      _GraphPanel.currentPanel._panel.title = title ? `FSP Graph: ${title}` : "FSP Graph";
-      _GraphPanel.currentPanel.updateProcesses(processes);
-      return;
+      if (!preserveColumnFocus) {
+        _GraphPanel.currentPanel._panel.reveal(void 0, true);
+      }
+      if (callbacks) {
+        _GraphPanel.currentPanel._callbacks = callbacks;
+      }
+      if (docUri) {
+        _GraphPanel.currentPanel._activeDocUri = docUri;
+      }
+      _GraphPanel.currentPanel._panel.title = title ? `FSP Studio: ${title}` : "FSP Studio";
+      _GraphPanel.currentPanel.updateProcesses(processes, allTargets, title, false);
+      return _GraphPanel.currentPanel;
     }
     const panel = vscode2.window.createWebviewPanel(
       "fspGraph",
-      title ? `FSP Graph: ${title}` : "FSP Graph",
-      column,
+      title ? `FSP Studio: ${title}` : "FSP Studio",
+      { viewColumn: column, preserveFocus: true },
       {
         enableScripts: true,
         localResourceRoots: [vscode2.Uri.file(path4.join(extensionUri.fsPath, "media"))],
         retainContextWhenHidden: true
       }
     );
-    _GraphPanel.currentPanel = new _GraphPanel(panel, extensionUri);
-    _GraphPanel.currentPanel.updateProcesses(processes);
+    _GraphPanel.currentPanel = new _GraphPanel(panel, extensionUri, callbacks);
+    _GraphPanel.currentPanel._activeDocUri = docUri;
+    _GraphPanel.currentPanel.updateProcesses(processes, allTargets, title, false);
+    return _GraphPanel.currentPanel;
   }
-  updateProcesses(processes) {
+  get activeTarget() {
+    return this._activeTarget;
+  }
+  get activeDocUri() {
+    return this._activeDocUri;
+  }
+  get isLiveSyncEnabled() {
+    return this._liveSyncEnabled;
+  }
+  setActiveDocUri(uri) {
+    this._activeDocUri = uri;
+  }
+  updateProcesses(processes, allTargets, activeTarget, preserveView = false) {
     this._processes = processes;
-    this._panel.webview.html = this._getHtmlForWebview(this._panel.webview);
+    if (allTargets) {
+      this._allTargets = allTargets;
+    }
+    if (activeTarget) {
+      this._activeTarget = activeTarget;
+      this._panel.title = `FSP Studio: ${activeTarget}`;
+    }
+    if (this._isWebviewReady) {
+      this._sendLoadMessage(preserveView);
+    }
+  }
+  startSimulation() {
+    if (this._isWebviewReady) {
+      this._panel.webview.postMessage({ command: "startSimulation" });
+    } else {
+      this._pendingSimulation = true;
+    }
+  }
+  highlightTrace(payload) {
+    if (this._isWebviewReady) {
+      this._panel.webview.postMessage({
+        command: "highlightTrace",
+        trace: payload.trace,
+        verdict: payload.verdict,
+        mode: payload.mode,
+        target: payload.target
+      });
+    } else {
+      this._pendingTrace = payload;
+    }
+  }
+  _sendLoadMessage(preserveView) {
     this._panel.webview.postMessage({
       command: "loadProcesses",
-      processes: this._processes
+      processes: this._processes,
+      allTargets: this._allTargets,
+      activeTarget: this._activeTarget,
+      preserveView
     });
+  }
+  async _handleExportImage(format, data, targetName) {
+    if (!data) return;
+    const cleanTarget = (targetName || this._activeTarget || "automaton").replace(/[^A-Za-z0-9_-]/g, "_");
+    const ext = format === "svg" ? "svg" : "png";
+    const defaultName = `${cleanTarget}.${ext}`;
+    const workspaceFolder = vscode2.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const defaultUri = workspaceFolder ? vscode2.Uri.file(path4.join(workspaceFolder, defaultName)) : vscode2.Uri.file(defaultName);
+    const saveUri = await vscode2.window.showSaveDialog({
+      defaultUri,
+      filters: format === "svg" ? { "Immagine Vettoriale SVG": ["svg"] } : { "Immagine PNG Alta Risoluzione": ["png"] },
+      saveLabel: `Esporta ${ext.toUpperCase()}`
+    });
+    if (!saveUri) return;
+    try {
+      if (format === "png") {
+        const base64Data = data.replace(/^data:image\/png;base64,/, "");
+        fs3.writeFileSync(saveUri.fsPath, Buffer.from(base64Data, "base64"));
+      } else {
+        fs3.writeFileSync(saveUri.fsPath, data, "utf8");
+      }
+      vscode2.window.showInformationMessage(`Grafo esportato con successo: ${path4.basename(saveUri.fsPath)}`);
+    } catch (err) {
+      vscode2.window.showErrorMessage(`Errore durante l'esportazione: ${err?.message || String(err)}`);
+    }
   }
   dispose() {
     _GraphPanel.currentPanel = void 0;
     this._panel.dispose();
   }
+  static buildWebviewHtml(options) {
+    return buildWebviewHtml(options);
+  }
   _getHtmlForWebview(webview) {
-    const scriptUri = webview.asWebviewUri(vscode2.Uri.file(path4.join(this._extensionUri.fsPath, "media", "graph.js")));
-    const styleUri = webview.asWebviewUri(vscode2.Uri.file(path4.join(this._extensionUri.fsPath, "media", "graph.css")));
-    const cytoscapeUri = webview.asWebviewUri(vscode2.Uri.file(path4.join(this._extensionUri.fsPath, "media", "cytoscape.min.js")));
-    const dagreUri = webview.asWebviewUri(vscode2.Uri.file(path4.join(this._extensionUri.fsPath, "media", "dagre.min.js")));
-    const cytoscapeDagreUri = webview.asWebviewUri(vscode2.Uri.file(path4.join(this._extensionUri.fsPath, "media", "cytoscape-dagre.js")));
+    const scriptUri = webview.asWebviewUri(vscode2.Uri.file(path4.join(this._extensionUri.fsPath, "media", "graph.js"))).toString();
+    const styleUri = webview.asWebviewUri(vscode2.Uri.file(path4.join(this._extensionUri.fsPath, "media", "graph.css"))).toString();
+    const cytoscapeUri = webview.asWebviewUri(vscode2.Uri.file(path4.join(this._extensionUri.fsPath, "media", "cytoscape.min.js"))).toString();
+    const dagreUri = webview.asWebviewUri(vscode2.Uri.file(path4.join(this._extensionUri.fsPath, "media", "dagre.min.js"))).toString();
+    const cytoscapeDagreUri = webview.asWebviewUri(vscode2.Uri.file(path4.join(this._extensionUri.fsPath, "media", "cytoscape-dagre.js"))).toString();
     const nonce = getNonce();
-    const processesJson = JSON.stringify(this._processes).replace(/</g, "\\u003c");
-    return `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>FSP Graph</title>
-            <link href="${styleUri}" rel="stylesheet">
-        </head>
-        <body>
-            <div id="toolbar">
-                <div class="toolbar-group">
-                    <span class="toolbar-label">Process:</span>
-                    <select id="processSelect"></select>
-                </div>
-                <div class="toolbar-group">
-                    <span class="toolbar-label">Layout:</span>
-                    <select id="layoutSelect">
-                        <option value="dagre-lr">Orizzontale (Left \u2192 Right)</option>
-                        <option value="dagre-tb">Verticale (Top \u2192 Bottom)</option>
-                        <option value="breadthfirst">Gerarchico ad Albero</option>
-                        <option value="concentric">Concentrico</option>
-                        <option value="cose">Organico (Force-Directed)</option>
-                    </select>
-                </div>
-                <div class="toolbar-group">
-                    <span class="toolbar-label">Stati:</span>
-                    <select id="labelSelect" title="Modalit\xE0 di visualizzazione dei nodi">
-                        <option value="name" selected>Nome dello stato</option>
-                        <option value="both">Nome + Numero</option>
-                        <option value="id">Solo Numero</option>
-                    </select>
-                </div>
-                <div class="toolbar-group">
-                    <button id="btnFit" title="Centra la vista sul grafo">\u{1F3AF} Centra</button>
-                    <button id="btnZoomIn" title="Ingrandisci (Zoom in)">+</button>
-                    <button id="btnZoomOut" title="Rimpicciolisci (Zoom out)">\u2212</button>
-                </div>
-                <span id="stateCount"></span>
-            </div>
-            <div id="cy"></div>
-
-            <script nonce="${nonce}">
-                window.__INITIAL_PROCESSES__ = ${processesJson};
-            </script>
-            <script nonce="${nonce}" src="${cytoscapeUri}"></script>
-            <script nonce="${nonce}" src="${dagreUri}"></script>
-            <script nonce="${nonce}" src="${cytoscapeDagreUri}"></script>
-            <script nonce="${nonce}" src="${scriptUri}"></script>
-        </body>
-        </html>`;
+    const initialProcessesJson = JSON.stringify(this._processes).replace(/</g, "\\u003c");
+    return _GraphPanel.buildWebviewHtml({
+      styleUri,
+      cytoscapeUri,
+      dagreUri,
+      cytoscapeDagreUri,
+      scriptUri,
+      cspSource: webview.cspSource,
+      nonce,
+      initialProcessesJson
+    });
   }
 };
 function getNonce() {
@@ -15777,7 +15994,347 @@ function updateDiagnostics(document2, collection, errors) {
 }
 
 // src/intellisense.ts
+var vscode5 = __toESM(require("vscode"));
+
+// src/sidebar/fspTreeProvider.ts
 var vscode4 = __toESM(require("vscode"));
+var path5 = __toESM(require("path"));
+
+// src/sidebar/fspParser.ts
+function parseFspSymbolsFromText(text) {
+  const result = [];
+  const lines = text.split("\n");
+  let inBlockComment = false;
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+    if (inBlockComment) {
+      const closeIdx = line.indexOf("*/");
+      if (closeIdx === -1) continue;
+      line = line.substring(closeIdx + 2);
+      inBlockComment = false;
+    }
+    const openIdx = line.indexOf("/*");
+    if (openIdx !== -1) {
+      const closeIdx = line.indexOf("*/", openIdx + 2);
+      if (closeIdx !== -1) {
+        line = line.substring(0, openIdx) + line.substring(closeIdx + 2);
+      } else {
+        line = line.substring(0, openIdx);
+        inBlockComment = true;
+      }
+    }
+    const commentIdx = line.indexOf("//");
+    if (commentIdx !== -1) {
+      line = line.substring(0, commentIdx);
+    }
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const compMatch = trimmed.match(/^(?:minimal\s+|deterministic\s+)*\|\|\s*([A-Z][A-Za-z0-9_]*)\s*(?:\([^)]*\)|\[[^\]]*\])*\s*=/);
+    if (compMatch) {
+      result.push({
+        name: compMatch[1],
+        kind: "composite",
+        line: i,
+        detail: "||"
+      });
+      continue;
+    }
+    const propMatch = trimmed.match(/^property\s+(?:\|\|\s*)?([A-Z][A-Za-z0-9_]*)\s*(?:\([^)]*\)|\[[^\]]*\])*\s*=/);
+    if (propMatch) {
+      result.push({
+        name: propMatch[1],
+        kind: "property",
+        line: i,
+        detail: "property"
+      });
+      continue;
+    }
+    const constMatch = trimmed.match(/^const\s+([A-Za-z0-9_]+)\s*=\s*(.+)$/);
+    if (constMatch) {
+      result.push({
+        name: constMatch[1],
+        kind: "const",
+        line: i,
+        detail: `= ${constMatch[2].trim()}`
+      });
+      continue;
+    }
+    const rangeMatch = trimmed.match(/^range\s+([A-Za-z0-9_]+)\s*=\s*(.+)$/);
+    if (rangeMatch) {
+      result.push({
+        name: rangeMatch[1],
+        kind: "range",
+        line: i,
+        detail: `= ${rangeMatch[2].trim()}`
+      });
+      continue;
+    }
+    const setMatch = trimmed.match(/^set\s+([A-Za-z0-9_]+)\s*=\s*(.+)$/);
+    if (setMatch) {
+      result.push({
+        name: setMatch[1],
+        kind: "set",
+        line: i,
+        detail: setMatch[2].trim()
+      });
+      continue;
+    }
+    if (!isPreviousLineContinuation(lines, i)) {
+      const procMatch = trimmed.match(/^(?:minimal\s+|deterministic\s+)*([A-Z][A-Za-z0-9_]*)\s*(?:\([^)]*\)|\[[^\]]*\])*\s*=/);
+      if (procMatch) {
+        result.push({
+          name: procMatch[1],
+          kind: "process",
+          line: i,
+          detail: "process"
+        });
+      }
+    }
+  }
+  return result;
+}
+function isPreviousLineContinuation(lines, currentIndex) {
+  for (let j = currentIndex - 1; j >= 0; j--) {
+    let prev = lines[j];
+    const cIdx = prev.indexOf("//");
+    if (cIdx !== -1) prev = prev.substring(0, cIdx);
+    prev = prev.trim();
+    if (!prev) continue;
+    return prev.endsWith(",");
+  }
+  return false;
+}
+
+// src/sidebar/fspTreeProvider.ts
+var FspTreeItem = class extends vscode4.TreeItem {
+  constructor(label, collapsibleState, itemType, symbol, documentUri, verification) {
+    super(label, collapsibleState);
+    this.label = label;
+    this.collapsibleState = collapsibleState;
+    this.itemType = itemType;
+    this.symbol = symbol;
+    this.documentUri = documentUri;
+    this.verification = verification;
+    if (itemType === "category") {
+      this.contextValue = "fspCategory";
+    } else if (itemType === "empty") {
+      this.contextValue = "fspEmpty";
+      this.iconPath = new vscode4.ThemeIcon("info");
+    } else if (symbol && documentUri) {
+      this.tooltip = this.buildTooltip(symbol, verification);
+      this.description = this.buildDescription(symbol, verification);
+      this.iconPath = this.getIcon(symbol, verification);
+      this.command = {
+        command: "fspModern.revealLine",
+        title: "Vai alla definizione",
+        arguments: [documentUri, symbol.line]
+      };
+      if (symbol.kind === "composite" || symbol.kind === "process" || symbol.kind === "property") {
+        this.contextValue = "fspTarget";
+      } else {
+        this.contextValue = "fspDefinition";
+      }
+    }
+  }
+  buildDescription(sym, ver) {
+    const parts = [];
+    if (sym.detail) {
+      parts.push(sym.detail);
+    }
+    if (ver) {
+      const label = ver.mode === "check" ? "Safety" : "Progress";
+      parts.push(ver.verdict === "ok" ? `\u2713 ${label} OK` : `\u2717 ${label} Violazione`);
+    }
+    return parts.join(" \u2022 ");
+  }
+  buildTooltip(sym, ver) {
+    const md = new vscode4.MarkdownString();
+    const kindLabel = {
+      composite: "Composizione Concorrente (`||`)",
+      process: "Processo FSP",
+      property: "Propriet\xE0 di Safety (`property`)",
+      const: "Costante (`const`)",
+      range: "Intervallo (`range`)",
+      set: "Insieme di Azioni (`set`)"
+    };
+    md.appendMarkdown(`**${sym.name}** \u2014 *${kindLabel[sym.kind]}*
+
+`);
+    md.appendMarkdown(`Riga ${sym.line + 1}
+`);
+    if (ver) {
+      md.appendMarkdown(`
+---
+`);
+      const modeStr = ver.mode === "check" ? "Safety & Deadlock" : "Progress";
+      if (ver.verdict === "ok") {
+        md.appendMarkdown(`\u2705 **${modeStr}**: Nessuna violazione rilevata.`);
+      } else {
+        md.appendMarkdown(`\u274C **${modeStr}**: Violazione rilevata!
+
+`);
+        if (ver.trace.length > 0) {
+          md.appendMarkdown(`**Traccia:** \`${ver.trace.join(" \u2192 ")}\``);
+        }
+      }
+    }
+    return md;
+  }
+  getIcon(sym, ver) {
+    if (ver) {
+      if (ver.verdict === "ok") {
+        return new vscode4.ThemeIcon("pass", new vscode4.ThemeColor("testing.iconPassed"));
+      } else {
+        return new vscode4.ThemeIcon("error", new vscode4.ThemeColor("testing.iconFailed"));
+      }
+    }
+    switch (sym.kind) {
+      case "composite":
+        return new vscode4.ThemeIcon("symbol-namespace", new vscode4.ThemeColor("symbolIcon.namespaceForeground"));
+      case "property":
+        return new vscode4.ThemeIcon("shield", new vscode4.ThemeColor("symbolIcon.booleanForeground"));
+      case "process":
+        return new vscode4.ThemeIcon("symbol-class", new vscode4.ThemeColor("symbolIcon.classForeground"));
+      case "const":
+        return new vscode4.ThemeIcon("symbol-constant");
+      case "range":
+        return new vscode4.ThemeIcon("symbol-enum");
+      case "set":
+        return new vscode4.ThemeIcon("symbol-array");
+    }
+  }
+};
+var FspTreeDataProvider = class _FspTreeDataProvider {
+  _onDidChangeTreeData = new vscode4.EventEmitter();
+  onDidChangeTreeData = this._onDidChangeTreeData.event;
+  activeDocument;
+  // Key: `${docUri}::${targetName}`
+  verificationCache = /* @__PURE__ */ new Map();
+  constructor() {
+    if (vscode4.window.activeTextEditor && this.isFspDoc(vscode4.window.activeTextEditor.document)) {
+      this.activeDocument = vscode4.window.activeTextEditor.document;
+    }
+  }
+  isFspDoc(doc) {
+    if (!doc) return false;
+    const ext = path5.extname(doc.fileName).toLowerCase();
+    return doc.languageId === "fsp" || ext === ".lts" || ext === ".fsp";
+  }
+  setActiveDocument(doc) {
+    if (doc && this.isFspDoc(doc)) {
+      this.activeDocument = doc;
+      this.refresh();
+    } else if (!vscode4.window.visibleTextEditors?.some((e) => this.isFspDoc(e.document))) {
+      this.refresh();
+    }
+  }
+  getActiveDocument() {
+    if (vscode4.window.activeTextEditor && this.isFspDoc(vscode4.window.activeTextEditor.document)) {
+      this.activeDocument = vscode4.window.activeTextEditor.document;
+    }
+    return this.activeDocument;
+  }
+  recordVerification(docUri, target, status) {
+    this.verificationCache.set(`${docUri.toString()}::${target}`, status);
+    this.refresh();
+  }
+  clearVerificationsForDoc(docUri) {
+    const prefix = `${docUri.toString()}::`;
+    for (const key of this.verificationCache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.verificationCache.delete(key);
+      }
+    }
+  }
+  refresh() {
+    this._onDidChangeTreeData.fire();
+  }
+  getTreeItem(element) {
+    return element;
+  }
+  getChildren(element) {
+    const doc = this.getActiveDocument();
+    if (!doc) {
+      return [
+        new FspTreeItem(
+          "Apri un file .lts o .fsp per iniziare",
+          vscode4.TreeItemCollapsibleState.None,
+          "empty"
+        )
+      ];
+    }
+    const symbols = _FspTreeDataProvider.parseDocumentSymbols(doc);
+    if (!element) {
+      const composites = symbols.filter((s) => s.kind === "composite");
+      const processes = symbols.filter((s) => s.kind === "process" || s.kind === "property");
+      const defs = symbols.filter((s) => s.kind === "const" || s.kind === "range" || s.kind === "set");
+      const categories = [];
+      const compCat = new FspTreeItem(
+        `Composizioni (${composites.length})`,
+        vscode4.TreeItemCollapsibleState.Expanded,
+        "category",
+        void 0,
+        doc.uri
+      );
+      compCat.iconPath = new vscode4.ThemeIcon("layers");
+      compCat.id = "cat-composites";
+      categories.push(compCat);
+      const procCat = new FspTreeItem(
+        `Processi e Propriet\xE0 (${processes.length})`,
+        vscode4.TreeItemCollapsibleState.Expanded,
+        "category",
+        void 0,
+        doc.uri
+      );
+      procCat.iconPath = new vscode4.ThemeIcon("symbol-structure");
+      procCat.id = "cat-processes";
+      categories.push(procCat);
+      if (defs.length > 0) {
+        const defCat = new FspTreeItem(
+          `Costanti, Range e Set (${defs.length})`,
+          vscode4.TreeItemCollapsibleState.Collapsed,
+          "category",
+          void 0,
+          doc.uri
+        );
+        defCat.iconPath = new vscode4.ThemeIcon("symbol-Misc");
+        defCat.id = "cat-defs";
+        categories.push(defCat);
+      }
+      return categories;
+    }
+    if (element.id === "cat-composites") {
+      const composites = symbols.filter((s) => s.kind === "composite");
+      if (composites.length === 0) {
+        return [new FspTreeItem("Nessuna composizione (||) definita", vscode4.TreeItemCollapsibleState.None, "empty")];
+      }
+      return composites.map((s) => {
+        const ver = this.verificationCache.get(`${doc.uri.toString()}::${s.name}`);
+        return new FspTreeItem(s.name, vscode4.TreeItemCollapsibleState.None, s.kind, s, doc.uri, ver);
+      });
+    }
+    if (element.id === "cat-processes") {
+      const processes = symbols.filter((s) => s.kind === "process" || s.kind === "property");
+      if (processes.length === 0) {
+        return [new FspTreeItem("Nessun processo definito", vscode4.TreeItemCollapsibleState.None, "empty")];
+      }
+      return processes.map((s) => {
+        const ver = this.verificationCache.get(`${doc.uri.toString()}::${s.name}`);
+        return new FspTreeItem(s.name, vscode4.TreeItemCollapsibleState.None, s.kind, s, doc.uri, ver);
+      });
+    }
+    if (element.id === "cat-defs") {
+      const defs = symbols.filter((s) => s.kind === "const" || s.kind === "range" || s.kind === "set");
+      return defs.map((s) => new FspTreeItem(s.name, vscode4.TreeItemCollapsibleState.None, s.kind, s, doc.uri));
+    }
+    return [];
+  }
+  static parseDocumentSymbols(document2) {
+    return parseFspSymbolsFromText(document2.getText());
+  }
+};
+
+// src/intellisense.ts
 var KEYWORD_DOCS = {
   "const": "**const identifier = expression**\n\nDefines an integer constant in FSP.",
   "range": "**range RangeName = Low..High**\n\nDefines a contiguous integer range type.",
@@ -15793,45 +16350,52 @@ var KEYWORD_DOCS = {
   "ERROR": "**ERROR**\n\nPrimitive error state (state -1 in LTSA). Safety properties flag violations if this state is reached."
 };
 var FspIntelliSense = class _FspIntelliSense {
-  constructor(context, diagnosticCollection2) {
+  constructor(context, diagnosticCollection2, onLiveUpdate) {
     this.context = context;
     this.diagnosticCollection = diagnosticCollection2;
+    this.onLiveUpdate = onLiveUpdate;
   }
   static instance;
   targetsCache = /* @__PURE__ */ new Map();
   debounceTimers = /* @__PURE__ */ new Map();
   runner;
-  static register(context, diagnosticCollection2) {
-    const intellisense = new _FspIntelliSense(context, diagnosticCollection2);
+  codeLensEmitter = new vscode5.EventEmitter();
+  onLiveUpdate;
+  static register(context, diagnosticCollection2, onLiveUpdate) {
+    const intellisense = new _FspIntelliSense(context, diagnosticCollection2, onLiveUpdate);
     this.instance = intellisense;
     intellisense.setupListeners();
     intellisense.setupProviders();
     return intellisense;
+  }
+  refreshCodeLens() {
+    this.codeLensEmitter.fire();
   }
   isFsp(document2) {
     const ext = document2.fileName.toLowerCase();
     return document2.languageId === "fsp" || ext.endsWith(".lts") || ext.endsWith(".fsp");
   }
   setupListeners() {
-    if (vscode4.window.activeTextEditor && this.isFsp(vscode4.window.activeTextEditor.document)) {
-      this.scheduleLint(vscode4.window.activeTextEditor.document, 100);
+    if (vscode5.window.activeTextEditor && this.isFsp(vscode5.window.activeTextEditor.document)) {
+      this.scheduleLint(vscode5.window.activeTextEditor.document, 100);
     }
     this.context.subscriptions.push(
-      vscode4.workspace.onDidOpenTextDocument((doc) => {
+      vscode5.workspace.onDidOpenTextDocument((doc) => {
         if (this.isFsp(doc)) {
           this.scheduleLint(doc, 100);
         }
       })
     );
     this.context.subscriptions.push(
-      vscode4.workspace.onDidChangeTextDocument((event) => {
+      vscode5.workspace.onDidChangeTextDocument((event) => {
         if (this.isFsp(event.document)) {
-          this.scheduleLint(event.document, 400);
+          this.codeLensEmitter.fire();
+          this.scheduleLint(event.document, 450);
         }
       })
     );
     this.context.subscriptions.push(
-      vscode4.workspace.onDidCloseTextDocument((doc) => {
+      vscode5.workspace.onDidCloseTextDocument((doc) => {
         const uriKey = doc.uri.toString();
         this.targetsCache.delete(uriKey);
         const timer = this.debounceTimers.get(uriKey);
@@ -15861,11 +16425,14 @@ var FspIntelliSense = class _FspIntelliSense {
         const jarPath = await ltsaJarProvider.getJar(this.context);
         this.runner = new LtsaRunner(jarPath, this.context.globalStorageUri);
       }
-      const tokenSource = new vscode4.CancellationTokenSource();
+      const tokenSource = new vscode5.CancellationTokenSource();
       const result = await this.runner.run(document2, "list", void 0, tokenSource.token);
       updateDiagnostics(document2, this.diagnosticCollection, result.errors);
       if (result.targets && result.targets.length > 0) {
         this.targetsCache.set(document2.uri.toString(), result.targets);
+      }
+      if (result.errors.length === 0 && this.onLiveUpdate) {
+        this.onLiveUpdate(document2, result.targets);
       }
     } catch {
     }
@@ -15877,7 +16444,7 @@ var FspIntelliSense = class _FspIntelliSense {
       { pattern: "**/*.fsp" }
     ];
     this.context.subscriptions.push(
-      vscode4.languages.registerCompletionItemProvider(
+      vscode5.languages.registerCompletionItemProvider(
         selector,
         {
           provideCompletionItems: (document2, position) => {
@@ -15892,7 +16459,7 @@ var FspIntelliSense = class _FspIntelliSense {
       )
     );
     this.context.subscriptions.push(
-      vscode4.languages.registerHoverProvider(
+      vscode5.languages.registerHoverProvider(
         selector,
         {
           provideHover: (document2, position) => {
@@ -15902,7 +16469,7 @@ var FspIntelliSense = class _FspIntelliSense {
       )
     );
     this.context.subscriptions.push(
-      vscode4.languages.registerDocumentSymbolProvider(
+      vscode5.languages.registerDocumentSymbolProvider(
         selector,
         {
           provideDocumentSymbols: (document2) => {
@@ -15911,44 +16478,130 @@ var FspIntelliSense = class _FspIntelliSense {
         }
       )
     );
+    this.context.subscriptions.push(
+      vscode5.languages.registerCodeLensProvider(
+        selector,
+        {
+          onDidChangeCodeLenses: this.codeLensEmitter.event,
+          provideCodeLenses: (document2) => {
+            return this.provideCodeLenses(document2);
+          }
+        }
+      )
+    );
+    this.context.subscriptions.push(
+      vscode5.languages.registerDefinitionProvider(
+        selector,
+        {
+          provideDefinition: (document2, position) => {
+            return this.provideDefinition(document2, position);
+          }
+        }
+      )
+    );
   }
-  provideCompletions(document2, position) {
+  provideCodeLenses(document2) {
+    const enabled = vscode5.workspace.getConfiguration("fspModern").get("enableCodeLens", true);
+    if (!enabled) {
+      return [];
+    }
+    const lenses = [];
+    const symbols = FspTreeDataProvider.parseDocumentSymbols(document2);
+    for (const sym of symbols) {
+      if (sym.kind !== "composite" && sym.kind !== "process" && sym.kind !== "property") {
+        continue;
+      }
+      const range = new vscode5.Range(sym.line, 0, sym.line, 0);
+      lenses.push(
+        new vscode5.CodeLens(range, {
+          title: "$(graph) Visualizza Grafo",
+          tooltip: `Mostra il grafo interattivo dell'automa ${sym.name}`,
+          command: "fspModern.showGraphTarget",
+          arguments: [sym.name, document2.uri]
+        })
+      );
+      lenses.push(
+        new vscode5.CodeLens(range, {
+          title: "$(play) Simula",
+          tooltip: `Avvia il simulatore interattivo passo-passo per ${sym.name}`,
+          command: "fspModern.simulateTarget",
+          arguments: [sym.name, document2.uri]
+        })
+      );
+      lenses.push(
+        new vscode5.CodeLens(range, {
+          title: "$(shield) Safety & Deadlock",
+          tooltip: `Verifica propriet\xE0 di Safety e assenza di Deadlock su ${sym.name}`,
+          command: "fspModern.checkSafetyTarget",
+          arguments: [sym.name, document2.uri]
+        })
+      );
+      lenses.push(
+        new vscode5.CodeLens(range, {
+          title: "$(sync) Progress",
+          tooltip: `Verifica Liveness e Progress su ${sym.name}`,
+          command: "fspModern.checkProgressTarget",
+          arguments: [sym.name, document2.uri]
+        })
+      );
+    }
+    return lenses;
+  }
+  provideDefinition(document2, position) {
+    const wordRange = document2.getWordRangeAtPosition(position);
+    if (!wordRange) return void 0;
+    const word = document2.getText(wordRange);
+    const symbols = FspTreeDataProvider.parseDocumentSymbols(document2);
+    const targetSym = symbols.find((s) => s.name === word);
+    if (targetSym) {
+      return new vscode5.Location(document2.uri, new vscode5.Position(targetSym.line, 0));
+    }
+    const lines = document2.getText().split("\n");
+    const localRegex = new RegExp(`^\\s*(${word})\\s*(?:\\[[^\\]]*\\])*\\s*=`);
+    for (let i = 0; i < lines.length; i++) {
+      if (localRegex.test(lines[i])) {
+        return new vscode5.Location(document2.uri, new vscode5.Position(i, 0));
+      }
+    }
+    return void 0;
+  }
+  provideCompletions(document2, _position) {
     const items = [];
     for (const [kw, doc] of Object.entries(KEYWORD_DOCS)) {
-      const item = new vscode4.CompletionItem(kw, vscode4.CompletionItemKind.Keyword);
+      const item = new vscode5.CompletionItem(kw, vscode5.CompletionItemKind.Keyword);
       item.detail = "FSP Keyword";
-      item.documentation = new vscode4.MarkdownString(doc);
+      item.documentation = new vscode5.MarkdownString(doc);
       items.push(item);
     }
     const cached = this.targetsCache.get(document2.uri.toString()) || [];
     for (const target of cached) {
       const isComp = target.kind === "composite";
-      const item = new vscode4.CompletionItem(
+      const item = new vscode5.CompletionItem(
         target.name,
-        isComp ? vscode4.CompletionItemKind.Module : vscode4.CompletionItemKind.Class
+        isComp ? vscode5.CompletionItemKind.Module : vscode5.CompletionItemKind.Class
       );
       item.detail = isComp ? `Composite Process ||${target.name}` : `Process ${target.name}`;
       items.push(item);
     }
-    const procSnippet = new vscode4.CompletionItem("proc", vscode4.CompletionItemKind.Snippet);
+    const procSnippet = new vscode5.CompletionItem("proc", vscode5.CompletionItemKind.Snippet);
     procSnippet.detail = "Process Definition";
-    procSnippet.insertText = new vscode4.SnippetString("${1:NAME} = (${2:action} -> ${1:NAME}).");
+    procSnippet.insertText = new vscode5.SnippetString("${1:NAME} = (${2:action} -> ${1:NAME}).");
     items.push(procSnippet);
-    const compSnippet = new vscode4.CompletionItem("comp", vscode4.CompletionItemKind.Snippet);
+    const compSnippet = new vscode5.CompletionItem("comp", vscode5.CompletionItemKind.Snippet);
     compSnippet.detail = "Parallel Composition";
-    compSnippet.insertText = new vscode4.SnippetString("||${1:SYSTEM} = (${2:P1} || ${3:P2}).");
+    compSnippet.insertText = new vscode5.SnippetString("||${1:SYSTEM} = (${2:P1} || ${3:P2}).");
     items.push(compSnippet);
-    const choiceSnippet = new vscode4.CompletionItem("choice", vscode4.CompletionItemKind.Snippet);
+    const choiceSnippet = new vscode5.CompletionItem("choice", vscode5.CompletionItemKind.Snippet);
     choiceSnippet.detail = "Action Choice (|)";
-    choiceSnippet.insertText = new vscode4.SnippetString("(${1:action1} -> ${2:STATE1} | ${3:action2} -> ${4:STATE2})");
+    choiceSnippet.insertText = new vscode5.SnippetString("(${1:action1} -> ${2:STATE1} | ${3:action2} -> ${4:STATE2})");
     items.push(choiceSnippet);
-    const whenSnippet = new vscode4.CompletionItem("when", vscode4.CompletionItemKind.Snippet);
+    const whenSnippet = new vscode5.CompletionItem("when", vscode5.CompletionItemKind.Snippet);
     whenSnippet.detail = "Guarded Transition (when)";
-    whenSnippet.insertText = new vscode4.SnippetString("when (${1:cond}) ${2:action} -> ${3:PROCESS}");
+    whenSnippet.insertText = new vscode5.SnippetString("when (${1:cond}) ${2:action} -> ${3:PROCESS}");
     items.push(whenSnippet);
-    const propSnippet = new vscode4.CompletionItem("prop", vscode4.CompletionItemKind.Snippet);
+    const propSnippet = new vscode5.CompletionItem("prop", vscode5.CompletionItemKind.Snippet);
     propSnippet.detail = "Safety Property";
-    propSnippet.insertText = new vscode4.SnippetString("property ${1:SAFE} = (${2:action} -> ${1:SAFE}).");
+    propSnippet.insertText = new vscode5.SnippetString("property ${1:SAFE} = (${2:action} -> ${1:SAFE}).");
     items.push(propSnippet);
     return items;
   }
@@ -15957,7 +16610,7 @@ var FspIntelliSense = class _FspIntelliSense {
     if (!wordRange) return void 0;
     const word = document2.getText(wordRange);
     if (KEYWORD_DOCS[word]) {
-      return new vscode4.Hover(new vscode4.MarkdownString(KEYWORD_DOCS[word]));
+      return new vscode5.Hover(new vscode5.MarkdownString(KEYWORD_DOCS[word]));
     }
     const text = document2.getText();
     const procRegex = new RegExp(`^\\s*(\\|\\|)?\\s*(${word})\\s*(\\[[^\\]]*\\])*\\s*=`, "m");
@@ -15965,83 +16618,47 @@ var FspIntelliSense = class _FspIntelliSense {
     if (match) {
       const isComp = !!match[1];
       const typeStr = isComp ? "Composite Process" : "Process";
-      const md = new vscode4.MarkdownString();
+      const md = new vscode5.MarkdownString();
       md.appendCodeblock(`${isComp ? "||" : ""}${word}`, "fsp");
       md.appendMarkdown(`*FSP ${typeStr} defined in current file.*`);
-      return new vscode4.Hover(md);
+      return new vscode5.Hover(md);
     }
     const constRegex = new RegExp(`^\\s*const\\s+(${word})\\s*=\\s*([^\\n\\r]+)`, "m");
     const constMatch = text.match(constRegex);
     if (constMatch) {
-      const md = new vscode4.MarkdownString();
+      const md = new vscode5.MarkdownString();
       md.appendCodeblock(`const ${word} = ${constMatch[2].trim()}`, "fsp");
       md.appendMarkdown(`*FSP Constant*`);
-      return new vscode4.Hover(md);
+      return new vscode5.Hover(md);
     }
     return void 0;
   }
   provideDocumentSymbols(document2) {
     const symbols = [];
-    const text = document2.getText();
-    const lines = text.split("\n");
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const compMatch = line.match(/^\s*\|\|\s*([A-Za-z0-9_]+)/);
-      if (compMatch) {
-        const name = compMatch[1];
-        const range = new vscode4.Range(i, 0, i, line.length);
-        const sym = new vscode4.DocumentSymbol(
-          name,
-          "Composite Process",
-          vscode4.SymbolKind.Module,
-          range,
-          range
-        );
-        symbols.push(sym);
-        continue;
+    const parsed = FspTreeDataProvider.parseDocumentSymbols(document2);
+    const lines = document2.getText().split("\n");
+    for (const item of parsed) {
+      const lineText = lines[item.line] || "";
+      const range = new vscode5.Range(item.line, 0, item.line, lineText.length);
+      let kind = vscode5.SymbolKind.Class;
+      let detail = "Process";
+      if (item.kind === "composite") {
+        kind = vscode5.SymbolKind.Module;
+        detail = "Composite Process (||)";
+      } else if (item.kind === "property") {
+        kind = vscode5.SymbolKind.Interface;
+        detail = "Safety Property";
+      } else if (item.kind === "const") {
+        kind = vscode5.SymbolKind.Constant;
+        detail = item.detail || "Constant";
+      } else if (item.kind === "range") {
+        kind = vscode5.SymbolKind.Enum;
+        detail = item.detail || "Range";
+      } else if (item.kind === "set") {
+        kind = vscode5.SymbolKind.Array;
+        detail = item.detail || "Action Set";
       }
-      const procMatch = line.match(/^\s*([A-Z][A-Za-z0-9_]*)\s*(\[[^\]]*\])*\s*=/);
-      if (procMatch && !line.trim().startsWith("//") && !line.trim().startsWith("/*")) {
-        const name = procMatch[1];
-        const range = new vscode4.Range(i, 0, i, line.length);
-        const sym = new vscode4.DocumentSymbol(
-          name,
-          "Process",
-          vscode4.SymbolKind.Class,
-          range,
-          range
-        );
-        symbols.push(sym);
-        continue;
-      }
-      const constMatch = line.match(/^\s*const\s+([A-Za-z0-9_]+)\s*=\s*(.*)/);
-      if (constMatch) {
-        const name = constMatch[1];
-        const range = new vscode4.Range(i, 0, i, line.length);
-        const sym = new vscode4.DocumentSymbol(
-          name,
-          `= ${constMatch[2].trim()}`,
-          vscode4.SymbolKind.Constant,
-          range,
-          range
-        );
-        symbols.push(sym);
-        continue;
-      }
-      const rangeMatch = line.match(/^\s*range\s+([A-Za-z0-9_]+)\s*=\s*(.*)/);
-      if (rangeMatch) {
-        const name = rangeMatch[1];
-        const range = new vscode4.Range(i, 0, i, line.length);
-        const sym = new vscode4.DocumentSymbol(
-          name,
-          `= ${rangeMatch[2].trim()}`,
-          vscode4.SymbolKind.Enum,
-          range,
-          range
-        );
-        symbols.push(sym);
-        continue;
-      }
+      symbols.push(new vscode5.DocumentSymbol(item.name, detail, kind, range, range));
     }
     return symbols;
   }
@@ -16050,29 +16667,38 @@ var FspIntelliSense = class _FspIntelliSense {
 // src/extension.ts
 var diagnosticCollection;
 var output;
+var treeProvider;
 var lastTarget = /* @__PURE__ */ new Map();
+var liveUpdateInProgress = false;
 function isFspDocument(doc) {
-  const ext = path5.extname(doc.fileName).toLowerCase();
+  const ext = path6.extname(doc.fileName).toLowerCase();
   return doc.languageId === "fsp" || ext === ".lts" || ext === ".fsp";
 }
-async function runBridge(context, doc, mode, target, title) {
+async function runBridge(context, doc, mode, target, title, silent = false) {
+  const execute = async (token) => {
+    const jarPath = await ltsaJarProvider.getJar(context);
+    const runner = new LtsaRunner(jarPath, context.globalStorageUri);
+    const result = await runner.run(doc, mode, target, token);
+    updateDiagnostics(doc, diagnosticCollection, result.errors);
+    return result;
+  };
   try {
-    return await vscode5.window.withProgress(
-      { location: vscode5.ProgressLocation.Notification, title, cancellable: true },
-      async (_progress, token) => {
-        const jarPath = await ltsaJarProvider.getJar(context);
-        const runner = new LtsaRunner(jarPath, context.globalStorageUri);
-        const result = await runner.run(doc, mode, target, token);
-        updateDiagnostics(doc, diagnosticCollection, result.errors);
-        return result;
-      }
+    if (silent) {
+      const cts = new vscode6.CancellationTokenSource();
+      return await execute(cts.token);
+    }
+    return await vscode6.window.withProgress(
+      { location: vscode6.ProgressLocation.Notification, title, cancellable: true },
+      async (_progress, token) => execute(token)
     );
   } catch (err) {
     if (err && err.message === "Cancelled") {
       return void 0;
     }
-    output.appendLine(`[error] ${err && err.message ? err.message : err}`);
-    vscode5.window.showErrorMessage("FSP: " + (err && err.message ? err.message : String(err)));
+    if (!silent) {
+      output.appendLine(`[error] ${err && err.message ? err.message : err}`);
+      vscode6.window.showErrorMessage("FSP: " + (err && err.message ? err.message : String(err)));
+    }
     return void 0;
   }
 }
@@ -16085,12 +16711,12 @@ function reportErrors(result) {
     output.appendLine(`  line ${e.line}:${e.col}  ${e.message}`);
   }
   output.show(true);
-  vscode5.window.showErrorMessage(`FSP: ${result.errors.length} error(s) found. See Problems / Output.`);
+  vscode6.window.showErrorMessage(`FSP: ${result.errors.length} error(s) found. See Problems / Output.`);
   return true;
 }
 async function pickTarget(doc, targets, placeHolder) {
   if (targets.length === 0) {
-    vscode5.window.showWarningMessage("FSP: no process or composite found in this file.");
+    vscode6.window.showWarningMessage("FSP: nessun processo o composizione trovato nel file.");
     return void 0;
   }
   const composites = targets.filter((t) => t.kind === "composite");
@@ -16111,7 +16737,7 @@ async function pickTarget(doc, targets, placeHolder) {
     });
   }
   items.sort((a, b) => Number(!!b.picked) - Number(!!a.picked));
-  const pick = await vscode5.window.showQuickPick(items, { placeHolder, matchOnDescription: true });
+  const pick = await vscode6.window.showQuickPick(items, { placeHolder, matchOnDescription: true });
   if (!pick) {
     return void 0;
   }
@@ -16119,99 +16745,273 @@ async function pickTarget(doc, targets, placeHolder) {
   lastTarget.set(doc.uri.toString(), name);
   return name;
 }
-async function activeFspDocument() {
-  const editor = vscode5.window.activeTextEditor;
-  if (!editor || !isFspDocument(editor.document)) {
-    vscode5.window.showErrorMessage("Please open an FSP (.lts or .fsp) file first.");
-    return void 0;
+async function resolveFspDocument(uriArg) {
+  if (uriArg) {
+    const openDoc = vscode6.workspace.textDocuments.find((d) => d.uri.toString() === uriArg.toString());
+    if (openDoc) return openDoc;
+    try {
+      return await vscode6.workspace.openTextDocument(uriArg);
+    } catch {
+    }
   }
-  if (editor.document.languageId !== "fsp") {
-    await vscode5.languages.setTextDocumentLanguage(editor.document, "fsp");
+  const editor = vscode6.window.activeTextEditor;
+  if (editor && isFspDocument(editor.document)) {
+    if (editor.document.languageId !== "fsp") {
+      await vscode6.languages.setTextDocumentLanguage(editor.document, "fsp");
+    }
+    return editor.document;
   }
-  return editor.document;
+  const treeDoc = treeProvider?.getActiveDocument();
+  if (treeDoc) {
+    return treeDoc;
+  }
+  vscode6.window.showErrorMessage("Apri prima un file FSP (.lts o .fsp).");
+  return void 0;
 }
-async function checkCommand(context, mode) {
-  const doc = await activeFspDocument();
-  if (!doc) {
-    return;
+function extractTargetAndUri(arg1, arg2) {
+  if (!arg1) {
+    return { target: void 0, uri: arg2 };
   }
-  const list = await runBridge(context, doc, "list", void 0, "Parsing FSP...");
-  if (!list || reportErrors(list)) {
-    return;
+  if (typeof arg1 === "string") {
+    return { target: arg1, uri: arg2 };
   }
-  const label = mode === "check" ? "Safety / deadlock check" : "Progress check";
-  const target = await pickTarget(doc, list.targets, `${label}: choose a target`);
-  if (!target) {
-    return;
+  if (arg1 instanceof FspTreeItem && arg1.symbol) {
+    return { target: arg1.symbol.name, uri: arg1.documentUri };
   }
-  const res = await runBridge(context, doc, mode, target, `${label} on ${target}...`);
-  if (!res || reportErrors(res)) {
-    return;
-  }
-  output.appendLine(`=== ${label}: ${target} (${path5.basename(doc.fileName)}) ===`);
-  output.appendLine(res.log.trimEnd());
-  output.appendLine("");
-  output.show(true);
-  if (res.verdict === "ok") {
-    vscode5.window.showInformationMessage(`FSP ${label}: ${target} - no violations.`);
-  } else {
-    const tr = res.trace.length ? ` Trace: ${res.trace.join(" \u2192 ")}` : "";
-    vscode5.window.showWarningMessage(`FSP ${label}: violation in ${target}.${tr}`);
-  }
+  return { target: void 0, uri: arg2 };
 }
 function activate(context) {
-  diagnosticCollection = vscode5.languages.createDiagnosticCollection("fsp");
-  output = vscode5.window.createOutputChannel("FSP");
-  context.subscriptions.push(diagnosticCollection, output);
-  FspIntelliSense.register(context, diagnosticCollection);
+  diagnosticCollection = vscode6.languages.createDiagnosticCollection("fsp");
+  output = vscode6.window.createOutputChannel("FSP");
+  treeProvider = new FspTreeDataProvider();
+  const treeView = vscode6.window.createTreeView("fspExplorer", {
+    treeDataProvider: treeProvider,
+    showCollapseAll: true
+  });
+  context.subscriptions.push(diagnosticCollection, output, treeView);
+  const getGraphCallbacks = (doc) => ({
+    onSelectTarget: async (newTarget) => {
+      lastTarget.set(doc.uri.toString(), newTarget);
+      await openGraphForTarget(context, doc, newTarget, false, true);
+    },
+    onRunCheck: async (mode, targetName) => {
+      await executeCheckOnTarget(context, doc, mode, targetName, true);
+    }
+  });
+  async function openGraphForTarget(ctx, doc, targetName, startSim = false, preserveFocus = false) {
+    const list = await runBridge(ctx, doc, "list", void 0, "Parsing FSP...", preserveFocus);
+    if (!list || reportErrors(list)) {
+      return;
+    }
+    const target = targetName || await pickTarget(doc, list.targets, "Mostra grafo di...");
+    if (!target) {
+      return;
+    }
+    lastTarget.set(doc.uri.toString(), target);
+    const res = await runBridge(ctx, doc, "graph", target, `Costruzione automa ${target}...`, preserveFocus);
+    if (!res || reportErrors(res)) {
+      return;
+    }
+    if (res.log) {
+      output.appendLine(`=== Graph: ${target} ===`);
+      output.appendLine(res.log.trimEnd());
+    }
+    if (res.machines.length === 0) {
+      vscode6.window.showWarningMessage(`FSP: nessun automa generabile per ${target}.`);
+      return;
+    }
+    const panel = GraphPanel.createOrShow(
+      ctx.extensionUri,
+      res.machines,
+      target,
+      list.targets,
+      doc.uri,
+      getGraphCallbacks(doc),
+      preserveFocus
+    );
+    if (startSim) {
+      panel.startSimulation();
+    }
+  }
+  async function executeCheckOnTarget(ctx, doc, mode, targetName, alwaysShowInGraph = false) {
+    const list = await runBridge(ctx, doc, "list", void 0, "Parsing FSP...");
+    if (!list || reportErrors(list)) {
+      return;
+    }
+    const label = mode === "check" ? "Safety & Deadlock" : "Progress";
+    const target = targetName || await pickTarget(doc, list.targets, `${label}: scegli target`);
+    if (!target) {
+      return;
+    }
+    lastTarget.set(doc.uri.toString(), target);
+    const res = await runBridge(ctx, doc, mode, target, `Verifica ${label} su ${target}...`);
+    if (!res || reportErrors(res)) {
+      return;
+    }
+    const verdictNorm = res.verdict === "ok" ? "ok" : "violation";
+    treeProvider.recordVerification(doc.uri, target, {
+      mode,
+      verdict: verdictNorm,
+      trace: res.trace,
+      timestamp: Date.now()
+    });
+    output.appendLine(`=== ${label}: ${target} (${path6.basename(doc.fileName)}) ===`);
+    output.appendLine(res.log.trimEnd());
+    output.appendLine("");
+    const shouldOpenGraph = verdictNorm === "violation" || alwaysShowInGraph || !!GraphPanel.currentPanel;
+    if (shouldOpenGraph) {
+      const graphRes = await runBridge(ctx, doc, "graph", target, `Caricamento grafo ${target}...`, true);
+      if (graphRes && graphRes.machines.length > 0) {
+        const panel = GraphPanel.createOrShow(
+          ctx.extensionUri,
+          graphRes.machines,
+          target,
+          list.targets,
+          doc.uri,
+          getGraphCallbacks(doc),
+          true
+        );
+        panel.highlightTrace({
+          trace: res.trace,
+          verdict: verdictNorm,
+          mode,
+          target
+        });
+      }
+    }
+    if (verdictNorm === "ok") {
+      vscode6.window.showInformationMessage(`\u2705 FSP ${label} (${target}): nessuna violazione rilevata.`);
+    } else {
+      output.show(true);
+      const tr = res.trace.length ? ` Traccia: ${res.trace.join(" \u2192 ")}` : "";
+      vscode6.window.showWarningMessage(`\u274C FSP ${label}: violazione in ${target}.${tr}`);
+    }
+  }
+  async function handleLiveDocumentUpdate(doc, targets) {
+    treeProvider.setActiveDocument(doc);
+    const panel = GraphPanel.currentPanel;
+    if (!panel || !panel.isLiveSyncEnabled || liveUpdateInProgress) {
+      return;
+    }
+    if (targets.length === 0) {
+      return;
+    }
+    let targetToRefresh = panel.activeTarget || lastTarget.get(doc.uri.toString());
+    if (!targetToRefresh || !targets.some((t) => t.name === targetToRefresh)) {
+      const composites = targets.filter((t) => t.kind === "composite");
+      targetToRefresh = composites.length > 0 ? composites[0].name : targets[0].name;
+    }
+    liveUpdateInProgress = true;
+    try {
+      const res = await runBridge(context, doc, "graph", targetToRefresh, "", true);
+      if (res && res.errors.length === 0 && res.machines.length > 0 && GraphPanel.currentPanel) {
+        GraphPanel.currentPanel.setActiveDocUri(doc.uri);
+        GraphPanel.currentPanel.updateProcesses(res.machines, targets, targetToRefresh, true);
+      }
+    } finally {
+      liveUpdateInProgress = false;
+    }
+  }
+  FspIntelliSense.register(context, diagnosticCollection, handleLiveDocumentUpdate);
   context.subscriptions.push(
-    vscode5.commands.registerCommand("fspModern.compile", async () => {
-      const doc = await activeFspDocument();
+    vscode6.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor && isFspDocument(editor.document)) {
+        treeProvider.setActiveDocument(editor.document);
+      }
+    }),
+    vscode6.workspace.onDidChangeTextDocument((event) => {
+      if (isFspDocument(event.document)) {
+        treeProvider.clearVerificationsForDoc(event.document.uri);
+        treeProvider.refresh();
+      }
+    })
+  );
+  context.subscriptions.push(
+    vscode6.commands.registerCommand("fspModern.compile", async () => {
+      const doc = await resolveFspDocument();
       if (!doc) {
         return;
       }
-      const res = await runBridge(context, doc, "list", void 0, "Compiling FSP...");
+      const res = await runBridge(context, doc, "list", void 0, "Compilazione FSP...");
       if (!res) {
         return;
       }
       if (reportErrors(res)) {
         return;
       }
+      treeProvider.refresh();
       const comps = res.targets.filter((t) => t.kind === "composite").length;
       const procs = res.targets.filter((t) => t.kind === "process").length;
       output.appendLine(`Compilation OK: ${procs} process(es), ${comps} composition(s).`);
-      vscode5.window.showInformationMessage(`FSP: compilation successful (${procs} processes, ${comps} compositions).`);
+      vscode6.window.showInformationMessage(`FSP: compilazione completata (${procs} processi, ${comps} composizioni).`);
     }),
-    vscode5.commands.registerCommand("fspModern.showGraph", async () => {
-      const doc = await activeFspDocument();
+    vscode6.commands.registerCommand("fspModern.showGraph", async (arg1, arg2) => {
+      const { target, uri } = extractTargetAndUri(arg1, arg2);
+      const doc = await resolveFspDocument(uri);
       if (!doc) {
         return;
       }
-      const list = await runBridge(context, doc, "list", void 0, "Parsing FSP...");
-      if (!list || reportErrors(list)) {
-        return;
-      }
-      const target = await pickTarget(doc, list.targets, "Show graph of...");
-      if (!target) {
-        return;
-      }
-      const res = await runBridge(context, doc, "graph", target, `Building LTS of ${target}...`);
-      if (!res || reportErrors(res)) {
-        return;
-      }
-      if (res.log) {
-        output.appendLine(`=== Graph: ${target} ===`);
-        output.appendLine(res.log.trimEnd());
-      }
-      if (res.machines.length === 0) {
-        vscode5.window.showWarningMessage(`FSP: nothing to draw for ${target}.`);
-        return;
-      }
-      GraphPanel.createOrShow(context.extensionUri, res.machines, target);
+      await openGraphForTarget(context, doc, target, false, false);
     }),
-    vscode5.commands.registerCommand("fspModern.checkSafety", () => checkCommand(context, "check")),
-    vscode5.commands.registerCommand("fspModern.checkProgress", () => checkCommand(context, "progress")),
-    vscode5.workspace.onDidCloseTextDocument((d) => diagnosticCollection.delete(d.uri))
+    vscode6.commands.registerCommand("fspModern.showGraphTarget", async (arg1, arg2) => {
+      const { target, uri } = extractTargetAndUri(arg1, arg2);
+      const doc = await resolveFspDocument(uri);
+      if (!doc) {
+        return;
+      }
+      await openGraphForTarget(context, doc, target, false, false);
+    }),
+    vscode6.commands.registerCommand("fspModern.simulateTarget", async (arg1, arg2) => {
+      const { target, uri } = extractTargetAndUri(arg1, arg2);
+      const doc = await resolveFspDocument(uri);
+      if (!doc) {
+        return;
+      }
+      await openGraphForTarget(context, doc, target, true, false);
+    }),
+    vscode6.commands.registerCommand("fspModern.checkSafety", async (arg1, arg2) => {
+      const { target, uri } = extractTargetAndUri(arg1, arg2);
+      const doc = await resolveFspDocument(uri);
+      if (!doc) {
+        return;
+      }
+      await executeCheckOnTarget(context, doc, "check", target, false);
+    }),
+    vscode6.commands.registerCommand("fspModern.checkSafetyTarget", async (arg1, arg2) => {
+      const { target, uri } = extractTargetAndUri(arg1, arg2);
+      const doc = await resolveFspDocument(uri);
+      if (!doc) {
+        return;
+      }
+      await executeCheckOnTarget(context, doc, "check", target, true);
+    }),
+    vscode6.commands.registerCommand("fspModern.checkProgress", async (arg1, arg2) => {
+      const { target, uri } = extractTargetAndUri(arg1, arg2);
+      const doc = await resolveFspDocument(uri);
+      if (!doc) {
+        return;
+      }
+      await executeCheckOnTarget(context, doc, "progress", target, false);
+    }),
+    vscode6.commands.registerCommand("fspModern.checkProgressTarget", async (arg1, arg2) => {
+      const { target, uri } = extractTargetAndUri(arg1, arg2);
+      const doc = await resolveFspDocument(uri);
+      if (!doc) {
+        return;
+      }
+      await executeCheckOnTarget(context, doc, "progress", target, true);
+    }),
+    vscode6.commands.registerCommand("fspModern.revealLine", async (uri, line) => {
+      const doc = await vscode6.workspace.openTextDocument(uri);
+      const editor = await vscode6.window.showTextDocument(doc, vscode6.ViewColumn.One);
+      const pos = new vscode6.Position(line, 0);
+      editor.selection = new vscode6.Selection(pos, pos);
+      editor.revealRange(new vscode6.Range(pos, pos), vscode6.TextEditorRevealType.InCenterIfOutsideViewport);
+    }),
+    vscode6.commands.registerCommand("fspModern.refreshExplorer", () => {
+      treeProvider.refresh();
+    }),
+    vscode6.workspace.onDidCloseTextDocument((d) => diagnosticCollection.delete(d.uri))
   );
 }
 function deactivate() {

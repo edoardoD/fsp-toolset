@@ -1,8 +1,8 @@
 {
   "name": "fsp-toolset-modern",
   "displayName": "FSP Toolset Modern",
-  "description": "Zero-config VS Code support for FSP / LTS: syntax, compile, safety & progress checks and interactive LTS graphs, powered by the LTSA engine.",
-  "version": "0.1.1",
+  "description": "Zero-config VS Code IDE for FSP / LTS automata: live graph preview, interactive simulator, CodeLens, safety & progress verification with visual counterexamples.",
+  "version": "0.2.0",
   "publisher": "EdoardoDesiderio",
   "author": {
     "name": "Edoardo Desiderio"
@@ -16,14 +16,20 @@
   },
   "categories": [
     "Programming Languages",
-    "Linters"
+    "Linters",
+    "Visualization"
   ],
   "activationEvents": [
     "onLanguage:fsp",
+    "onView:fspExplorer",
     "onCommand:fspModern.compile",
     "onCommand:fspModern.showGraph",
+    "onCommand:fspModern.showGraphTarget",
+    "onCommand:fspModern.simulateTarget",
     "onCommand:fspModern.checkSafety",
-    "onCommand:fspModern.checkProgress"
+    "onCommand:fspModern.checkSafetyTarget",
+    "onCommand:fspModern.checkProgress",
+    "onCommand:fspModern.checkProgressTarget"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -48,23 +54,68 @@
         "path": "./syntaxes/fsp.tmLanguage.json"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "fspStudio",
+          "title": "FSP Studio (Automi)",
+          "icon": "media/fsp-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "fspStudio": [
+        {
+          "id": "fspExplorer",
+          "name": "Esplora Automi e Proprietà"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "fspModern.compile",
-        "title": "FSP: Compile Current File"
+        "title": "FSP: Compila File Corrente",
+        "icon": "$(check)"
       },
       {
         "command": "fspModern.showGraph",
-        "title": "FSP: Display Graph Visualisation",
-        "icon": "$(git-commit)"
+        "title": "FSP: Visualizza Grafo Interattivo",
+        "icon": "$(type-hierarchy-sub)"
+      },
+      {
+        "command": "fspModern.showGraphTarget",
+        "title": "Visualizza Grafo",
+        "icon": "$(type-hierarchy-sub)"
+      },
+      {
+        "command": "fspModern.simulateTarget",
+        "title": "Simula Passo-Passo",
+        "icon": "$(play)"
       },
       {
         "command": "fspModern.checkSafety",
-        "title": "FSP: Check Safety and Deadlock"
+        "title": "FSP: Verifica Safety & Deadlock",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "fspModern.checkSafetyTarget",
+        "title": "Verifica Safety & Deadlock",
+        "icon": "$(shield)"
       },
       {
         "command": "fspModern.checkProgress",
-        "title": "FSP: Check Progress"
+        "title": "FSP: Verifica Progress & Liveness",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "fspModern.checkProgressTarget",
+        "title": "Verifica Progress",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "fspModern.refreshExplorer",
+        "title": "Aggiorna FSP Explorer",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -72,7 +123,61 @@
         {
           "when": "resourceLangId == fsp",
           "command": "fspModern.showGraph",
+          "group": "navigation@1"
+        },
+        {
+          "when": "resourceLangId == fsp",
+          "command": "fspModern.simulateTarget",
+          "group": "navigation@2"
+        },
+        {
+          "when": "resourceLangId == fsp",
+          "command": "fspModern.checkSafety",
+          "group": "navigation@3"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "fspModern.refreshExplorer",
+          "when": "view == fspExplorer",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "fspModern.showGraphTarget",
+          "when": "view == fspExplorer && viewItem == fspTarget",
+          "group": "inline@1"
+        },
+        {
+          "command": "fspModern.simulateTarget",
+          "when": "view == fspExplorer && viewItem == fspTarget",
+          "group": "inline@2"
+        },
+        {
+          "command": "fspModern.checkSafetyTarget",
+          "when": "view == fspExplorer && viewItem == fspTarget",
+          "group": "inline@3"
+        },
+        {
+          "command": "fspModern.showGraphTarget",
+          "when": "view == fspExplorer && viewItem == fspTarget",
+          "group": "1_actions@1"
+        },
+        {
+          "command": "fspModern.simulateTarget",
+          "when": "view == fspExplorer && viewItem == fspTarget",
+          "group": "1_actions@2"
+        },
+        {
+          "command": "fspModern.checkSafetyTarget",
+          "when": "view == fspExplorer && viewItem == fspTarget",
+          "group": "2_verify@1"
+        },
+        {
+          "command": "fspModern.checkProgressTarget",
+          "when": "view == fspExplorer && viewItem == fspTarget",
+          "group": "2_verify@2"
         }
       ]
     },
@@ -83,7 +188,12 @@
         "fspModern.ltsaJarPath": {
           "type": "string",
           "default": "",
-          "description": "Optional: Path to a local ltsa.jar. If empty, the extension will download it automatically."
+          "description": "Optional: Path to a local ltsa.jar. If empty, the extension uses the bundled ltsa.jar."
+        },
+        "fspModern.enableCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline CodeLens buttons (Visualizza Grafo, Simula, Safety, Progress) above processes and compositions."
         }
       }
     }
@@ -110,6 +220,7 @@
     "esbuild": "^0.23.0",
     "eslint": "^9.6.0",
     "mocha": "^10.5.2",
+    "playwright": "^1.49.0",
     "typescript": "^5.5.3"
   }
 }

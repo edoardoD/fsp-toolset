@@ -1,176 +1,88 @@
 # FSP Toolset Modern
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/edoardoD/fsp-toolset)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.93.0-007ACC.svg)](https://code.visualstudio.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#-licenza-e-crediti)
 
-**FSP Toolset Modern** è l'estensione moderna per Visual Studio Code dedicata al linguaggio formale **FSP** (*Finite State Processes* / *Flexible Software Process*) e alla modellazione e verifica di sistemi di transizione a stati etichettati (**LTS** - *Labelled Transition Systems*).
+**FSP Toolset Modern** è un ambiente integrato (IDE) per Visual Studio Code dedicato alla progettazione, verifica formale e simulazione di automi in linguaggio **FSP** (*Finite State Processes*) e sistemi di transizione a stati etichettati (**LTS** - *Labelled Transition Systems*).
 
-Progettata per garantire **massima stabilità, semplicità d'uso e configurazione zero**, porta nel tuo editor preferito:
-- Evidenziazione sintattica avanzata.
-- Compilazione e diagnostica inline con il motore ufficiale LTSA dell'Imperial College.
-- **Verifica formale di Safety, Deadlock e Progress** con controesempi (tracce).
-- Visualizzazione grafica interattiva degli automi con layout intelligenti, senza dipendenze esterne come Graphviz.
+Progettata con un approccio **Code-First con Live Preview**, garantisce massima pulizia, zero configurazione e feedback immediato:
+- **Live Graph Preview** sincronizzata in tempo reale mentre scrivi codice FSP.
+- **CodeLens inline** sopra ogni processo e composizione (`Visualizza Grafo | Simula | Safety & Deadlock | Progress`).
+- **Simulatore / Animator Interattivo** per esplorare gli automi passo-passo direttamente sul grafo.
+- **Evidenziazione visiva dei Controesempi** (tracce verso `DEADLOCK` o `ERROR`) direttamente sugli stati e sugli archi.
+- **Pannello laterale FSP Studio** dedicato nella Activity Bar.
+- **Esportazione Grafica** in **PNG ad alta risoluzione (2x)** e **SVG vettoriale**.
 
 ---
 
 ## ✨ Funzionalità Principali
 
-- 🎨 **Syntax Highlighting Avanzato**: supporto completo per file `.lts` e `.fsp` (processi, costanti, range, azioni, operatori di composizione concorrente `||`, prefissi `->`, scelte `|`, relabelling, insiemi e commenti).
-- ⚡ **Compilazione & Diagnostica Inline**: esegue il parser e l'analizzatore formale LTSA segnalando istantaneamente gli errori di sintassi sia inline nell'editor che nel pannello **Problems** di VS Code.
-- 🛡️ **Verifica Formale Integrata (Safety & Deadlock)**:
-  - Equivalente al menu *Check → Safety* di LTSA.
-  - Rileva deadlock e violazioni di proprietà `property` o stati `ERROR`.
-  - Mostra la sequenza esatta di azioni (traccia / counterexample) che conduce alla violazione.
-- 🔄 **Controllo di Liveness & Progress**:
-  - Equivalente al menu *Check → Progress* di LTSA.
-  - Verifica l'assenza di starvation e livelock con individuazione degli insiemi terminali.
-- 🎯 **Target Picker Intelligente**:
-  - Permette di scegliere esattamente quale processo singolo o composizione (`||`) analizzare o visualizzare.
-  - Compila solo il componente richiesto, evitando esplosioni dello spazio degli stati su modelli complessi (es. *Space Invaders*).
-  - Ricorda l'ultimo target selezionato per ciascun file.
-- 📊 **Visualizzatore Grafico Interattivo (Webview)**:
-  - **Zero Graphviz Dependency**: rendering puramente client-side basato su **Cytoscape.js** + **Dagre**.
-  - **Palette Tematica Dinamica**: colori calcolati in tempo reale sul tema di VS Code (Dark, Light, High Contrast), senza bande nere o artefatti di rendering.
-  - **Semantica Visiva degli Stati**:
-    - 🟢 **Stato Iniziale (0)**: rettangolo arrotondato verde.
-    - ⚪ **Stati Normali**: cerchi con identificativo di stato.
-    - 🔘 **Stati Deadlock / STOP**: ottagoni grigi chiaramente contrassegnati.
-    - 🔴 **Stati ERROR**: rombi rossi evidenziati.
-  - **Layout Switcher Multiplo**:
-    - *Orizzontale (Left → Right)*: layout gerarchico Dagre ottimale per automi.
-    - *Verticale (Top → Bottom)*: gerarchico standard.
-    - *Gerarchico ad Albero (Breadthfirst)*.
-    - *Concentrico (Concentric)* centrato sullo stato iniziale.
-    - *Organico (CoSE / Force-Directed)*.
-  - **Controlli di Navigazione**: pulsante di centratura (🎯 *Centra*), pulsanti di Zoom In/Out e supporto completo per pan e drag-and-drop dei singoli nodi.
-- 🚀 **Zero-Config Reale**: il file `ltsa.jar` è pre-incluso direttamente all'interno dell'estensione; non richiede connessione internet o download al primo avvio.
+- ⚡ **Live Preview in Tempo Reale**:
+  - Modifica il codice `.lts` o `.fsp` a sinistra e osserva l'automa aggiornarsi automaticamente nel pannello laterale destro, mantenendo zoom e impostazioni di layout (attivabile/disattivabile tramite il pulsante `⚡ Live`).
+- 🪄 **CodeLens & Go-to-Definition Inline**:
+  - Pulsanti d'azione rapidi direttamente sopra ogni definizione di processo (`P = ...`), proprietà (`property SAFE = ...`) e composizione (`||SYS = ...`).
+  - Supporto `Cmd+Click` / `F12` (*Go to Definition*) per saltare immediatamente alla definizione di qualsiasi processo, costante, range o set.
+- 🎮 **Simulatore / Animator Passo-Passo Integrato**:
+  - Avvia la modalità `🎮 Simula` per esplorare il comportamento dell'automa partendo dallo stato iniziale `0`.
+  - Clicca direttamente sulle transizioni abilitate nel grafo oppure usa i pulsanti delle azioni nel cassetto inferiore del Simulatore.
+  - Include cronologia completa del percorso (*breadcrumb*), conteggio passi, `⏪ Indietro (Step Back)`, `⏮ Reset` e rilevamento visivo immediato di stati `STOP` (Deadlock) o `ERROR`.
+- 🛡️ **Verifica Formale (Safety, Deadlock & Progress) con Controesempi sul Grafo**:
+  - Equivalente ai controlli *Check → Safety* e *Check → Progress* di LTSA.
+  - In caso di violazione o deadlock, evidenzia in rosso il percorso esatto sul grafo numerando i passi (`[#1]`, `[#2]`, ...) e permette di riprodurre il controesempio nel Simulatore con un clic (`▶️ Simula Traccia`).
+- 🧭 **Pannello Laterale FSP Studio (Activity Bar)**:
+  - Vista ad albero dedicata che elenca **Composizioni (`||`)**, **Processi e Proprietà**, **Costanti, Range e Set**.
+  - Mostra i badge con l'esito dell'ultima verifica (`✓ Safety OK` / `✗ Safety Violazione`) e pulsanti d'azione rapida su ogni elemento.
+- 📊 **Visualizzatore Grafico Interattivo & Esportazione**:
+  - Rendering client-side con **Cytoscape.js** + **Dagre** (zero dipendenze Graphviz).
+  - **5 algoritmi di layout**: *Orizzontale (Left → Right)*, *Verticale (Top → Bottom)*, *Gerarchico ad Albero*, *Concentrico*, *Organico (Force-Directed)*.
+  - **Esportazione Immagini**: salva il grafo in **PNG ad alta risoluzione** (`📷 PNG`) o **SVG vettoriale** (`📐 SVG`).
 
 ---
 
 ## 📋 Prerequisiti
 
-- **Java Runtime Environment (JRE o JDK 8+)**: è sufficiente una qualsiasi installazione Java presente sul sistema (es. [Adoptium Eclipse Temurin](https://adoptium.net/), OpenJDK, Oracle JDK). L'estensione rileva automaticamente la JVM tramite `find-java-home`.
-- **Nessuna installazione di Graphviz/dot richiesta** (funziona nativamente su macOS Apple Silicon/Intel, Windows e Linux).
+- **Java Runtime Environment (JRE o JDK 8+)**: rilevato automaticamente tramite `find-java-home`.
+- **Nessuna installazione di Graphviz richiesta**: il file `ltsa.jar` e i motori grafici sono già inclusi nell'estensione.
 
 ---
 
 ## 📦 Installazione
 
-Se hai a disposizione il pacchetto compilato `.vsix`:
-
-1. Apri la Command Palette (`Cmd+Shift+P` su macOS o `Ctrl+Shift+P` su Windows/Linux).
-2. Digita e seleziona **Extensions: Install from VSIX...**.
-3. Seleziona il file `fsp-toolset-modern-0.1.0.vsix`.
-
-Oppure installa via terminale:
+Da terminale o da VS Code (**Extensions: Install from VSIX...**):
 ```bash
-code --install-extension fsp-toolset-modern-0.1.0.vsix
+code --install-extension fsp-toolset-modern-0.2.0.vsix
 ```
 
 ---
 
-## 🎯 Guida all'Uso
+## 🧪 Suite di Test Automatici (LTSA + Playwright UI)
 
-### 1. File di Esempio FSP
+Il progetto include una suite completa di test automatizzati (Mocha + Playwright Headless Chromium) che verifica sia il backend formale LTSA sia la grafica renderizzata sul `<canvas>` HTML5 della Webview:
 
-Crea un file con estensione `.lts` o `.fsp` (ad esempio `mutex.lts`):
-
-```fsp
-// Esempio Mutua Esclusione con Lock
-LOCK = (acquire -> release -> LOCK).
-
-USER = (acquire -> release -> USER).
-
-property SAFE = (acquire -> release -> SAFE).
-
-// Composizione concorrente corretta
-||SYS = (USER || LOCK || SAFE).
-
-// Esempio con deadlock
-DL = (a -> b -> STOP).
+```bash
+npm test
 ```
 
-### 2. Compilazione e Verifica Sintattica
-
-- Premi `Cmd+Shift+P` (o `Ctrl+Shift+P`) ed esegui:
-  ```
-  FSP: Compile Current File
-  ```
-- L'estensione analizza il file, popola i diagnostici inline/pannello **Problems** e notifica il numero di processi e composizioni individuati.
-
-### 3. Verifica Formale (Safety, Deadlock e Progress)
-
-- **Controllo Safety & Deadlock**:
-  - Esegui `FSP: Check Safety and Deadlock`.
-  - Seleziona il processo o la composizione da verificare dal menu rapido (es. `SYS` o `DL`).
-  - L'esito viene mostrato tramite notifica e dettagliato nel canale di output **FSP**, inclusa la traccia completa in caso di violazione:
-    ```
-    === Safety / deadlock check: DL (mutex.lts) ===
-    Composition:
-    FSPTARGET = DL
-    State Space:
-     3 = 2 ** 2
-    Composing...
-      potential DEADLOCK
-    Trace to DEADLOCK:
-      a
-      b
-    ```
-- **Controllo Progress**:
-  - Esegui `FSP: Check Progress` per verificare l'assenza di violazioni di liveness/starvation.
-
-### 4. Visualizzazione Grafica dell'Automa a Stati
-
-- Clicca sull'icona **Grafo** in alto a destra nell'editor oppure esegui:
-  ```
-  FSP: Display Graph Visualisation
-  ```
-- Scegli il processo o la composizione dal QuickPick: si aprirà la Webview laterale interattiva.
-- Usa la barra degli strumenti per:
-  - Cambiare processo al volo dal menu a tendina **Process**.
-  - Cambiare orientamento e algoritmo dal menu **Layout** (*Orizzontale*, *Verticale*, *Albero*, *Concentrico*, *Organico*).
-  - Usare **🎯 Centra** o **+ / −** per regolare l'inquadratura.
+I test verificano automaticamente:
+1. Compilazione FSP, rilevamento errori sintattici e verifica formale Safety/Deadlock/Progress tramite `FspBridge`.
+2. Parsing strutturale dei simboli FSP (`composite`, `process`, `property`, `const`, `range`, `set`).
+3. Rendering grafico su `<canvas>` Cytoscape.js, cambio dinamico di layout ed etichette stati.
+4. Automazione passo-passo del **Simulatore / Animator** (`step`, `stepBack`, `reset`).
+5. Evidenziazione visiva dei **controesempi** sul grafo e replay automatico della traccia.
+6. Esportazione grafica in **PNG**, **SVG** e cattura di screenshot visuali tramite Playwright.
 
 ---
 
-## ⌨️ Comandi Disponibili
+## ⌨️ Comandi Principali
 
 | Comando | ID | Descrizione |
 |---|---|---|
-| `FSP: Compile Current File` | `fspModern.compile` | Esegue il controllo sintattico e registra processi/composizioni. |
-| `FSP: Display Graph Visualisation` | `fspModern.showGraph` | Apre la Webview con l'automa a stati interattivo del target selezionato. |
-| `FSP: Check Safety and Deadlock` | `fspModern.checkSafety` | Verifica assenza di violazioni `property`, `ERROR` e deadlock (con traccia). |
-| `FSP: Check Progress` | `fspModern.checkProgress` | Verifica proprietà di progresso e insiemi terminali (con traccia). |
-
----
-
-## ⚙️ Impostazioni dell'Estensione
-
-L'estensione include già il runtime LTSA e non richiede configurazione. È comunque possibile personalizzare il percorso di `ltsa.jar` se si desidera utilizzarne una versione modificata:
-
-| Impostazione | Tipo | Default | Descrizione |
-|---|---|---|---|
-| `fspModern.ltsaJarPath` | `string` | `""` | *(Opzionale)* Percorso assoluto a un file `ltsa.jar` personalizzato. Se vuoto, viene utilizzato quello pre-incluso nell'estensione. |
-
----
-
-## 🛠️ Risoluzione Problemi (FAQ)
-
-<details>
-<summary><b>1. "Java Runtime not found" all'avvio</b></summary>
-Assicurati che Java (JRE o JDK versione 8 o superiore) sia installato e accessibile. Puoi scaricare una JRE open-source gratuita da <a href="https://adoptium.net/">Adoptium Temurin</a>.
-</details>
-
-<details>
-<summary><b>2. Come analizzare un singolo processo senza comporre tutto il file?</b></summary>
-Quando lanci <code>FSP: Display Graph Visualisation</code> o <code>FSP: Check Safety and Deadlock</code>, l'estensione mostra un selettore (QuickPick) con tutti i processi singoli e le composizioni <code>||</code>. Seleziona il processo desiderato: l'estensione isolerà solo quel componente senza comporre l'intero sistema.
-</details>
-
-<details>
-<summary><b>3. Funziona senza una cartella workspace aperta?</b></summary>
-Sì! Puoi aprire e verificare singoli file <code>.lts</code> o <code>.fsp</code> anche isolati: l'estensione utilizza file temporanei sicuri memorizzati nel global storage di VS Code.
-</details>
+| `FSP: Visualizza Grafo Interattivo` | `fspModern.showGraph` | Apre FSP Studio con il grafo interattivo dell'automa. |
+| `Simula Passo-Passo` | `fspModern.simulateTarget` | Apre il grafo e avvia subito il Simulatore interattivo sul target. |
+| `FSP: Verifica Safety & Deadlock` | `fspModern.checkSafety` | Verifica proprietà di Safety e assenza di Deadlock evidenziando eventuali controesempi. |
+| `FSP: Verifica Progress & Liveness` | `fspModern.checkProgress` | Verifica assenza di starvation/livelock. |
+| `FSP: Compila File Corrente` | `fspModern.compile` | Esegue il controllo sintattico e aggiorna la diagnostica. |
 
 ---
 

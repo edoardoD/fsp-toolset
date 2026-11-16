@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { updateDiagnostics } from './diagnostics';
 import { ltsaJarProvider } from './ltsa/ltsaProvider';
 import { LtsaRunner, FspTarget } from './ltsa/ltsaRunner';
+import { FspTreeDataProvider } from './sidebar/fspTreeProvider';
 
 const KEYWORD_DOCS: Record<string, string> = {
     'const': '**const identifier = expression**\n\nDefines an integer constant in FSP.',
@@ -18,23 +19,38 @@ const KEYWORD_DOCS: Record<string, string> = {
     'ERROR': '**ERROR**\n\nPrimitive error state (state -1 in LTSA). Safety properties flag violations if this state is reached.'
 };
 
+export type LiveUpdateCallback = (document: vscode.TextDocument, targets: FspTarget[]) => void;
+
 export class FspIntelliSense {
     private static instance: FspIntelliSense;
     private targetsCache = new Map<string, FspTarget[]>();
     private debounceTimers = new Map<string, NodeJS.Timeout>();
     private runner: LtsaRunner | undefined;
+    private codeLensEmitter = new vscode.EventEmitter<void>();
+    private onLiveUpdate?: LiveUpdateCallback;
 
     constructor(
         private context: vscode.ExtensionContext,
-        private diagnosticCollection: vscode.DiagnosticCollection
-    ) {}
+        private diagnosticCollection: vscode.DiagnosticCollection,
+        onLiveUpdate?: LiveUpdateCallback
+    ) {
+        this.onLiveUpdate = onLiveUpdate;
+    }
 
-    public static register(context: vscode.ExtensionContext, diagnosticCollection: vscode.DiagnosticCollection): FspIntelliSense {
-        const intellisense = new FspIntelliSense(context, diagnosticCollection);
+    public static register(
+        context: vscode.ExtensionContext,
+        diagnosticCollection: vscode.DiagnosticCollection,
+        onLiveUpdate?: LiveUpdateCallback
+    ): FspIntelliSense {
+        const intellisense = new FspIntelliSense(context, diagnosticCollection, onLiveUpdate);
         this.instance = intellisense;
         intellisense.setupListeners();
         intellisense.setupProviders();
         return intellisense;
+    }
+
+    public refreshCodeLens() {
+        this.codeLensEmitter.fire();
     }
 
     private isFsp(document: vscode.TextDocument): boolean {
@@ -43,12 +59,10 @@ export class FspIntelliSense {
     }
 
     private setupListeners() {
-        // Run live check on active editor
         if (vscode.window.activeTextEditor && this.isFsp(vscode.window.activeTextEditor.document)) {
             this.scheduleLint(vscode.window.activeTextEditor.document, 100);
         }
 
-        // On document open
         this.context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {
                 if (this.isFsp(doc)) {
@@ -57,16 +71,15 @@ export class FspIntelliSense {
             })
         );
 
-        // On document change (live typing)
         this.context.subscriptions.push(
             vscode.workspace.onDidChangeTextDocument((event) => {
                 if (this.isFsp(event.document)) {
-                    this.scheduleLint(event.document, 400);
+                    this.codeLensEmitter.fire();
+                    this.scheduleLint(event.document, 450);
                 }
             })
         );
 
-        // On document close: clean up
         this.context.subscriptions.push(
             vscode.workspace.onDidCloseTextDocument((doc) => {
                 const uriKey = doc.uri.toString();
@@ -106,15 +119,17 @@ export class FspIntelliSense {
             const tokenSource = new vscode.CancellationTokenSource();
             const result = await this.runner.run(document, 'list', undefined, tokenSource.token);
 
-            // Update live diagnostics (red squiggles for errors)
             updateDiagnostics(document, this.diagnosticCollection, result.errors);
 
-            // Update target symbol cache for autocompletion
             if (result.targets && result.targets.length > 0) {
                 this.targetsCache.set(document.uri.toString(), result.targets);
             }
+
+            if (result.errors.length === 0 && this.onLiveUpdate) {
+                this.onLiveUpdate(document, result.targets);
+            }
         } catch {
-            // Silently ignore background lint errors (e.g. while java is starting)
+            // Silently ignore background lint errors
         }
     }
 
@@ -161,12 +176,118 @@ export class FspIntelliSense {
                 }
             )
         );
+
+        // 4. CodeLens Provider (Inline Actions above Processes & Composites)
+        this.context.subscriptions.push(
+            vscode.languages.registerCodeLensProvider(
+                selector,
+                {
+                    onDidChangeCodeLenses: this.codeLensEmitter.event,
+                    provideCodeLenses: (document) => {
+                        return this.provideCodeLenses(document);
+                    }
+                }
+            )
+        );
+
+        // 5. Go to Definition Provider (Cmd+Click on Processes, Constants, Ranges, Sets)
+        this.context.subscriptions.push(
+            vscode.languages.registerDefinitionProvider(
+                selector,
+                {
+                    provideDefinition: (document, position) => {
+                        return this.provideDefinition(document, position);
+                    }
+                }
+            )
+        );
     }
 
-    private provideCompletions(document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] {
+    private provideCodeLenses(document: vscode.TextDocument): vscode.CodeLens[] {
+        const enabled = vscode.workspace.getConfiguration('fspModern').get<boolean>('enableCodeLens', true);
+        if (!enabled) {
+            return [];
+        }
+
+        const lenses: vscode.CodeLens[] = [];
+        const symbols = FspTreeDataProvider.parseDocumentSymbols(document);
+
+        for (const sym of symbols) {
+            if (sym.kind !== 'composite' && sym.kind !== 'process' && sym.kind !== 'property') {
+                continue;
+            }
+            const range = new vscode.Range(sym.line, 0, sym.line, 0);
+
+            // 1. Visualizza Grafo
+            lenses.push(
+                new vscode.CodeLens(range, {
+                    title: '$(graph) Visualizza Grafo',
+                    tooltip: `Mostra il grafo interattivo dell'automa ${sym.name}`,
+                    command: 'fspModern.showGraphTarget',
+                    arguments: [sym.name, document.uri]
+                })
+            );
+
+            // 2. Simula Passo-Passo
+            lenses.push(
+                new vscode.CodeLens(range, {
+                    title: '$(play) Simula',
+                    tooltip: `Avvia il simulatore interattivo passo-passo per ${sym.name}`,
+                    command: 'fspModern.simulateTarget',
+                    arguments: [sym.name, document.uri]
+                })
+            );
+
+            // 3. Verifica Safety & Deadlock
+            lenses.push(
+                new vscode.CodeLens(range, {
+                    title: '$(shield) Safety & Deadlock',
+                    tooltip: `Verifica proprietà di Safety e assenza di Deadlock su ${sym.name}`,
+                    command: 'fspModern.checkSafetyTarget',
+                    arguments: [sym.name, document.uri]
+                })
+            );
+
+            // 4. Verifica Progress
+            lenses.push(
+                new vscode.CodeLens(range, {
+                    title: '$(sync) Progress',
+                    tooltip: `Verifica Liveness e Progress su ${sym.name}`,
+                    command: 'fspModern.checkProgressTarget',
+                    arguments: [sym.name, document.uri]
+                })
+            );
+        }
+
+        return lenses;
+    }
+
+    private provideDefinition(document: vscode.TextDocument, position: vscode.Position): vscode.Location | undefined {
+        const wordRange = document.getWordRangeAtPosition(position);
+        if (!wordRange) return undefined;
+        const word = document.getText(wordRange);
+
+        const symbols = FspTreeDataProvider.parseDocumentSymbols(document);
+        const targetSym = symbols.find(s => s.name === word);
+        if (targetSym) {
+            return new vscode.Location(document.uri, new vscode.Position(targetSym.line, 0));
+        }
+
+        // Also check local sub-states inside the file
+        const lines = document.getText().split('\n');
+        const localRegex = new RegExp(`^\\s*(${word})\\s*(?:\\[[^\\]]*\\])*\\s*=`);
+        for (let i = 0; i < lines.length; i++) {
+            if (localRegex.test(lines[i])) {
+                return new vscode.Location(document.uri, new vscode.Position(i, 0));
+            }
+        }
+
+        return undefined;
+    }
+
+    private provideCompletions(document: vscode.TextDocument, _position: vscode.Position): vscode.CompletionItem[] {
         const items: vscode.CompletionItem[] = [];
 
-        // Keywords
         for (const [kw, doc] of Object.entries(KEYWORD_DOCS)) {
             const item = new vscode.CompletionItem(kw, vscode.CompletionItemKind.Keyword);
             item.detail = 'FSP Keyword';
@@ -174,7 +295,6 @@ export class FspIntelliSense {
             items.push(item);
         }
 
-        // Cached targets (processes & composites)
         const cached = this.targetsCache.get(document.uri.toString()) || [];
         for (const target of cached) {
             const isComp = target.kind === 'composite';
@@ -186,7 +306,6 @@ export class FspIntelliSense {
             items.push(item);
         }
 
-        // Snippets
         const procSnippet = new vscode.CompletionItem('proc', vscode.CompletionItemKind.Snippet);
         procSnippet.detail = 'Process Definition';
         procSnippet.insertText = new vscode.SnippetString('${1:NAME} = (${2:action} -> ${1:NAME}).');
@@ -224,7 +343,6 @@ export class FspIntelliSense {
             return new vscode.Hover(new vscode.MarkdownString(KEYWORD_DOCS[word]));
         }
 
-        // Check if word is a defined process or constant in the file
         const text = document.getText();
         const procRegex = new RegExp(`^\\s*(\\|\\|)?\\s*(${word})\\s*(\\[[^\\]]*\\])*\\s*=`, 'm');
         const match = text.match(procRegex);
@@ -251,75 +369,33 @@ export class FspIntelliSense {
 
     private provideDocumentSymbols(document: vscode.TextDocument): vscode.DocumentSymbol[] {
         const symbols: vscode.DocumentSymbol[] = [];
-        const text = document.getText();
-        const lines = text.split('\n');
+        const parsed = FspTreeDataProvider.parseDocumentSymbols(document);
+        const lines = document.getText().split('\n');
 
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
+        for (const item of parsed) {
+            const lineText = lines[item.line] || '';
+            const range = new vscode.Range(item.line, 0, item.line, lineText.length);
+            let kind = vscode.SymbolKind.Class;
+            let detail = 'Process';
 
-            // Match Composite: ||NAME =
-            const compMatch = line.match(/^\s*\|\|\s*([A-Za-z0-9_]+)/);
-            if (compMatch) {
-                const name = compMatch[1];
-                const range = new vscode.Range(i, 0, i, line.length);
-                const sym = new vscode.DocumentSymbol(
-                    name,
-                    'Composite Process',
-                    vscode.SymbolKind.Module,
-                    range,
-                    range
-                );
-                symbols.push(sym);
-                continue;
+            if (item.kind === 'composite') {
+                kind = vscode.SymbolKind.Module;
+                detail = 'Composite Process (||)';
+            } else if (item.kind === 'property') {
+                kind = vscode.SymbolKind.Interface;
+                detail = 'Safety Property';
+            } else if (item.kind === 'const') {
+                kind = vscode.SymbolKind.Constant;
+                detail = item.detail || 'Constant';
+            } else if (item.kind === 'range') {
+                kind = vscode.SymbolKind.Enum;
+                detail = item.detail || 'Range';
+            } else if (item.kind === 'set') {
+                kind = vscode.SymbolKind.Array;
+                detail = item.detail || 'Action Set';
             }
 
-            // Match Process: NAME = or NAME[i] =
-            const procMatch = line.match(/^\s*([A-Z][A-Za-z0-9_]*)\s*(\[[^\]]*\])*\s*=/);
-            if (procMatch && !line.trim().startsWith('//') && !line.trim().startsWith('/*')) {
-                const name = procMatch[1];
-                const range = new vscode.Range(i, 0, i, line.length);
-                const sym = new vscode.DocumentSymbol(
-                    name,
-                    'Process',
-                    vscode.SymbolKind.Class,
-                    range,
-                    range
-                );
-                symbols.push(sym);
-                continue;
-            }
-
-            // Match Constants: const NAME =
-            const constMatch = line.match(/^\s*const\s+([A-Za-z0-9_]+)\s*=\s*(.*)/);
-            if (constMatch) {
-                const name = constMatch[1];
-                const range = new vscode.Range(i, 0, i, line.length);
-                const sym = new vscode.DocumentSymbol(
-                    name,
-                    `= ${constMatch[2].trim()}`,
-                    vscode.SymbolKind.Constant,
-                    range,
-                    range
-                );
-                symbols.push(sym);
-                continue;
-            }
-
-            // Match Ranges: range NAME =
-            const rangeMatch = line.match(/^\s*range\s+([A-Za-z0-9_]+)\s*=\s*(.*)/);
-            if (rangeMatch) {
-                const name = rangeMatch[1];
-                const range = new vscode.Range(i, 0, i, line.length);
-                const sym = new vscode.DocumentSymbol(
-                    name,
-                    `= ${rangeMatch[2].trim()}`,
-                    vscode.SymbolKind.Enum,
-                    range,
-                    range
-                );
-                symbols.push(sym);
-                continue;
-            }
+            symbols.push(new vscode.DocumentSymbol(item.name, detail, kind, range, range));
         }
 
         return symbols;
