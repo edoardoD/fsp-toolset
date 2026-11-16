@@ -2,6 +2,7 @@
 .vscode-test/**
 src/**
 out/**
+screen/**
 node_modules/**
 examples/test.lts
 test.lts

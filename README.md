@@ -16,6 +16,14 @@ Progettata con un approccio **Code-First con Live Preview**, garantisce massima 
 
 ---
 
+## 📸 Anteprima
+
+![FSP Studio Live Graph & Matrix View](https://raw.githubusercontent.com/edoardoD/fsp-toolset/main/media/screenshots/studio-matrix-graph.png)
+
+![FSP Studio Simulator & Counterexample Trace](https://raw.githubusercontent.com/edoardoD/fsp-toolset/main/media/screenshots/studio-simulator-trace.png)
+
+---
+
 ## ✨ Funzionalità Principali
 
 - ⚡ **Live Preview in Tempo Reale**:

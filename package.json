@@ -2,7 +2,7 @@
   "name": "fsp-toolset-modern",
   "displayName": "FSP Toolset Modern",
   "description": "Zero-config VS Code IDE for FSP / LTS automata: live graph preview, interactive simulator, CodeLens, safety & progress verification with visual counterexamples.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "EdoardoDesiderio",
   "author": {
     "name": "Edoardo Desiderio"
